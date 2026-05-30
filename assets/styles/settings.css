@@ -1,0 +1,459 @@
+/* settings.css — tela de configurações (categorias e contas) */
+
+.settings-page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.settings-tab-content {
+  display: grid;
+  gap: 16px;
+}
+
+/* cabeçalho com botões */
+.settings-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* lista de itens */
+.settings-list {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: background .12s;
+  flex-wrap: nowrap;
+}
+
+.settings-item:hover { background: var(--surface-soft); }
+
+.settings-item--inactive .settings-item-icon,
+.settings-item--inactive .settings-item-name,
+.settings-item--inactive .settings-badge-inactive {
+  opacity: .55;
+}
+
+.settings-item-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.settings-item-name {
+  flex: 1;
+  min-width: 0;
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-badge-inactive {
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.settings-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.settings-item:hover .settings-item-actions { opacity: 1; }
+
+.settings-item-actions .ghost-button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: .75rem;
+}
+
+.settings-delete-btn { color: var(--red) !important; }
+.settings-delete-btn:hover { background: var(--red-soft) !important; }
+
+/* formulário inline */
+.settings-inline-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.settings-form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.settings-emoji-input {
+  width: 72px !important;
+  text-align: center;
+  font-size: 1.2rem !important;
+}
+
+.settings-color-input {
+  width: 52px !important;
+  height: 42px !important;
+  padding: 2px 4px !important;
+  cursor: pointer;
+}
+
+/* painel de importação */
+.settings-import-panel {
+  margin-bottom: 16px;
+}
+
+.settings-import-textarea {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-family: "Courier New", monospace;
+  font-size: .78rem;
+  color: var(--ink);
+  background: white;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.settings-import-textarea:focus {
+  outline: 2px solid rgba(15, 118, 110, .18);
+  border-color: var(--teal);
+}
+
+.settings-error {
+  margin: 0;
+  color: var(--red);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+/* responsivo */
+@media (max-width: 760px) {
+  .settings-item-actions { opacity: 1; }
+  .settings-header-actions { width: 100%; justify-content: flex-end; }
+}
+
+
+/* botão desconectar na página de configurações */
+.settings-disconnect {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-disconnect button {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.settings-disconnect button:hover {
+  background: var(--red-soft);
+}
+
+
+/* ─── Action Menu (dropdown "...") ─────────────────────────────────────────── */
+.action-menu {
+  position: relative;
+}
+
+.action-menu-trigger {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+
+.action-menu-trigger:hover {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+.action-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 30;
+  min-width: 140px;
+  margin: 4px 0 0;
+  padding: 6px 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(17, 45, 37, .12);
+  opacity: 1;
+}
+
+.action-menu-item {
+  display: block;
+  width: 100%;
+  padding: 9px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: .82rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background .1s;
+}
+
+.action-menu-item:hover {
+  background: var(--teal-soft);
+}
+
+.action-menu-item.danger {
+  color: var(--red);
+}
+
+.action-menu-item.danger:hover {
+  background: var(--red-soft);
+}
+
+
+/* ─── Formulário dentro de modal ───────────────────────────────────────────── */
+.settings-modal-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.settings-modal-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .settings-modal-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ─── Botões de ícone (cabeçalho categorias/contas) ────────────────────────── */
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+
+.icon-button:hover {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+}
+
+
+/* ─── Import Transactions ──────────────────────────────────────────────────── */
+.import-transactions {
+  padding: 18px;
+}
+
+.import-step {
+  display: grid;
+  gap: 14px;
+}
+
+.import-step h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.import-description {
+  margin: 0;
+  font-size: .82rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.import-description code {
+  background: var(--surface-soft);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: .76rem;
+}
+
+/* Format box */
+.import-format-box {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.import-format-box strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: .78rem;
+  color: var(--teal-dark);
+}
+
+.import-format-box ul {
+  margin: 4px 0 12px;
+  padding-left: 18px;
+}
+
+.import-format-box li {
+  margin-bottom: 2px;
+}
+
+.import-format-box code {
+  background: white;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: .74rem;
+  border: 1px solid var(--line);
+}
+
+.import-format-box p {
+  margin: 4px 0 0;
+  font-size: .76rem;
+  color: var(--muted);
+}
+
+/* Resolve section */
+.import-resolve-section {
+  display: grid;
+  gap: 8px;
+}
+
+.import-resolve-section h5 {
+  margin: 8px 0 4px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.import-resolve-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.import-resolve-name {
+  flex: 1;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.import-resolve-item select {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: .78rem;
+  background: white;
+  color: var(--ink);
+}
+
+/* Summary */
+.import-summary {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.import-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.import-summary-label {
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.import-summary-value {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Progress bar */
+.import-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.import-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.import-progress-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 4px;
+  transition: width .3s ease;
+}
+
+.import-progress-text {
+  margin: 0;
+  font-size: .8rem;
+  color: var(--muted);
+  text-align: center;
+}

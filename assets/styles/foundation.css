@@ -1,0 +1,55 @@
+/* Foundation: tokens, reset e utilitarios globais. */
+:root {
+  --bg: #f6f8f4;
+  --surface: #ffffff;
+  --surface-soft: #f1f5ef;
+  --ink: #14241e;
+  --muted: #63756e;
+  --line: #e4ebe5;
+  --teal: #0f766e;
+  --teal-dark: #085b56;
+  --teal-soft: #e7f5f2;
+  --green: #198754;
+  --red: #d95245;
+  --red-soft: #fff0ec;
+  --orange: #dd8b39;
+  --shadow: 0 18px 42px rgba(17, 45, 37, .07);
+  --radius: 22px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-width: 300px;
+}
+
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+.hidden { display: none !important; }
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 8% 4%, rgba(15, 118, 110, .08), transparent 27rem),
+    radial-gradient(circle at 90% 92%, rgba(221, 139, 57, .09), transparent 24rem);
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.tools/
+.env
+.env.local
+.env.*.local
+
+# Dados pessoais
+extrato.json
+categorias-import.json
+client_secret_*.json

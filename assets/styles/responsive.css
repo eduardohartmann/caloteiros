@@ -1,0 +1,246 @@
+/* ─── Tablet: sidebar recolhida (só ícones) ──────────────────────────────── */
+@media (max-width: 1020px) {
+  .sidebar {
+    width: 72px;
+    padding: 22px 12px;
+  }
+
+  /* esconde textos, mantém ícones */
+  .sidebar .brand span:last-child,
+  .menu button .menu-label,
+  .sync-card {
+    display: none;
+  }
+
+  .sidebar .brand { gap: 0; }
+
+  .menu button {
+    justify-content: center;
+    padding: 0;
+    min-height: 46px;
+  }
+
+  .menu button span { font-size: 1.3rem; width: auto; }
+
+  .workspace { width: calc(100% - 72px); }
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Mobile: bottom nav + layout em coluna ──────────────────────────────── */
+@media (max-width: 760px) {
+
+  /* ── welcome ── */
+  .welcome { padding: 20px; }
+  .hero {
+    display: block;
+    padding: 48px 0 24px;
+    min-height: unset;
+  }
+  .hero h1 { font-size: clamp(2rem, 8vw, 3rem); }
+  .hero-card { margin: 44px auto 0; }
+  .hero-copy p { font-size: .95rem; }
+
+  /* ── layout geral ── */
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    /* espaço para a bottom nav */
+    padding-bottom: 68px;
+  }
+
+  /* ── sidebar vira bottom nav ── */
+  .sidebar {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-height: 0;
+    height: 64px;
+    padding: 0;
+    flex-direction: row;
+    align-items: stretch;
+    border-right: none;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    z-index: 100;
+    box-shadow: 0 -4px 16px rgba(17, 45, 37, .06);
+  }
+
+  /* esconde brand e sync-card na bottom nav */
+  .sidebar .brand,
+  .sync-card {
+    display: none;
+  }
+
+  /* menu ocupa toda a largura */
+  .menu {
+    margin: 0;
+    display: flex;
+    flex: 1;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  /* cada item do menu */
+  .menu button {
+    flex: 1;
+    min-height: unset;
+    height: 100%;
+    padding: 6px 4px 8px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    border-radius: 0;
+    font-size: .6rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .01em;
+  }
+
+  .menu button span {
+    font-size: 1.3rem;
+    width: auto;
+    line-height: 1;
+  }
+
+  /* label visível na bottom nav — usa nomes curtos */
+  .menu button .menu-label--full { display: none; }
+  .menu button .menu-label--short {
+    display: block;
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .menu button.active {
+    color: var(--teal-dark);
+    background: var(--teal-soft);
+  }
+
+  /* ── workspace ── */
+  .workspace {
+    width: 100%;
+    padding: 18px 15px 12px;
+    order: 1;
+    overflow-x: hidden;
+  }
+
+  /* ── topbar ── */
+  .topbar {
+    align-items: center;
+    gap: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  /* Esconde o "Olá, nome" no mobile */
+  .topbar .eyebrow { display: none; }
+
+  /* Título compacto */
+  .topbar h2 {
+    font-size: 1.1rem;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .month-nav-label {
+    min-width: 90px;
+    font-size: .78rem;
+  }
+
+  .month-nav-btn {
+    width: 30px;
+    height: 30px;
+    font-size: .7rem;
+  }
+
+  .secondary-button.compact {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: .75rem;
+  }
+
+  /* ── cards de resumo ── */
+  .cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* saldo total ocupa linha inteira */
+  .metric.balance {
+    grid-column: 1 / -1;
+  }
+
+  /* saldo do mês ocupa linha inteira */
+  .metric.month-balance {
+    grid-column: 1 / -1;
+  }
+
+  .metric {
+    min-height: 100px;
+    padding: 18px 18px;
+  }
+
+  .metric strong {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+
+  /* ── painéis ── */
+  .panel { padding: 16px 14px; }
+
+  /* ── formulário ── */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* ── tabela de lançamentos ── */
+  .transactions-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search,
+  .search input { width: 100%; }
+
+  /* ── gráfico de categorias ── */
+  .category-row {
+    grid-template-columns: 90px 1fr 72px;
+    gap: 8px;
+  }
+
+  /* ── casal ── */
+  .couple-summary { grid-template-columns: 1fr; }
+  .couple-code-box { flex-direction: column; align-items: flex-start; }
+
+  /* ── configurações ── */
+  .settings-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .settings-item-actions { opacity: 1; }
+
+  .toast { bottom: 80px; }
+}
+
+/* ─── Mobile pequeno (≤ 380px) ───────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .menu button .menu-label { display: none; }
+  .menu button { padding: 0; }
+  .cards { grid-template-columns: 1fr; }
+  .metric.balance { grid-column: auto; }
+}

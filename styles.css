@@ -1,0 +1,10 @@
+/*
+ * Entrada dos estilos.
+ * Modifique o arquivo da secao desejada em assets/styles/.
+ */
+@import url("./assets/styles/foundation.css");
+@import url("./assets/styles/components.css");
+@import url("./assets/styles/dashboard.css");
+@import url("./assets/styles/couple.css");
+@import url("./assets/styles/settings.css");
+@import url("./assets/styles/responsive.css");
