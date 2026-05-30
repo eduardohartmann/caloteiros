@@ -9,10 +9,12 @@ export default function CoupleSetup({ userName, userEmail, onCreateCouple, onJoi
   const [tab, setTab] = useState("create");   // "create" | "join"
   const [code, setCode] = useState("");
   const [partnerName, setPartnerName] = useState("");
+  const [partnerEmail, setPartnerEmail] = useState("");
 
   function handleCreate(event) {
     event.preventDefault();
-    onCreateCouple();
+    if (!partnerEmail.trim()) return;
+    onCreateCouple(partnerEmail.trim());
   }
 
   function handleJoin(event) {
@@ -51,8 +53,8 @@ export default function CoupleSetup({ userName, userEmail, onCreateCouple, onJoi
         {tab === "create" && (
           <form onSubmit={handleCreate} className="couple-setup-form">
             <p className="couple-setup-hint">
-              Você será o <strong>usuário A</strong>. Após criar, compartilhe o código gerado
-              com seu parceiro(a) para que ele(a) entre como <strong>usuário B</strong>.
+              Você será o <strong>usuário A</strong>. Informe o email Google do seu parceiro(a)
+              para compartilhar a planilha. Após criar, envie o código gerado para ele(a).
             </p>
             <div className="couple-setup-user">
               <span className="couple-user-badge">A</span>
@@ -61,7 +63,17 @@ export default function CoupleSetup({ userName, userEmail, onCreateCouple, onJoi
                 <small>{userEmail}</small>
               </div>
             </div>
-            <button className="primary-button" type="submit" disabled={loading}>
+            <label>
+              Email Google do parceiro(a)
+              <input
+                required
+                type="email"
+                placeholder="parceiro@gmail.com"
+                value={partnerEmail}
+                onChange={(e) => setPartnerEmail(e.target.value)}
+              />
+            </label>
+            <button className="primary-button" type="submit" disabled={loading || !partnerEmail.trim()}>
               {loading ? "Criando…" : "Criar planilha do casal"}
             </button>
           </form>

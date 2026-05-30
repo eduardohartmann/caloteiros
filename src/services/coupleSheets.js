@@ -217,6 +217,27 @@ export async function joinCoupleSpreadsheet(token, spreadsheetId, nameB, emailB)
   return { spreadsheetId, userKey: "B", config: { ...config, nomeB: nameB, emailB }, entries };
 }
 
+// ─── compartilhar com o parceiro (por email) ─────────────────────────────────
+
+export async function shareCoupleWithPartner(token, spreadsheetId, partnerEmail) {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role: "writer",
+        type: "user",
+        emailAddress: partnerEmail
+      })
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || "Não foi possível compartilhar com o parceiro.");
+  }
+}
+
 // ─── carregar planilha existente ──────────────────────────────────────────────
 
 export async function loadCoupleSpreadsheet(token, spreadsheetId) {

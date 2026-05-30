@@ -8,7 +8,8 @@ import {
   joinCoupleSpreadsheet,
   loadCoupleSpreadsheet,
   markEntryAsPaid,
-  saveCoupleEntry
+  saveCoupleEntry,
+  shareCoupleWithPartner
 } from "../services/coupleSheets.js";
 
 /**
@@ -64,10 +65,11 @@ export default function useCouple(auth, notify, confirm) {
 
   // ── ações ───────────────────────────────────────────────────────────────────
 
-  async function handleCreateCouple() {
+  async function handleCreateCouple(partnerEmail) {
     setCoupleLoading(true);
     try {
       const data = await createCoupleSpreadsheet(token, accountName, accountEmail);
+      await shareCoupleWithPartner(token, data.spreadsheetId, partnerEmail);
       setCoupleSpreadsheetId(data.spreadsheetId);
       setCoupleUserKey(data.userKey);
       setCoupleConfig(data.config);
@@ -75,7 +77,7 @@ export default function useCouple(auth, notify, confirm) {
       setCoupleReady(true);
       await saveSetting(token, spreadsheetId, "coupleSpreadsheetId", data.spreadsheetId);
       localStorage.setItem(STORAGE.coupleSheetId, data.spreadsheetId);
-      notify("Planilha do casal criada. Compartilhe o código com seu parceiro(a).");
+      notify("Planilha do casal criada e compartilhada. Envie o código ao seu parceiro(a).");
     } catch (error) {
       notify(error.message, true);
     } finally {
