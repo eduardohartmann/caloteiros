@@ -40,7 +40,7 @@ export default function App() {
         <div className="grain" />
         <div className="restoring-screen">
           <Brand />
-          <Spinner text="Conectando…." />
+          <Spinner text="Conectando…" />
         </div>
       </>
     );
