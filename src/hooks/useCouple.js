@@ -85,10 +85,10 @@ export default function useCouple(auth, notify, confirm) {
     }
   }
 
-  async function handleJoinCouple(code, partnerName) {
+  async function handleJoinCouple(code) {
     setCoupleLoading(true);
     try {
-      const data = await joinCoupleSpreadsheet(token, code, partnerName, accountEmail);
+      const data = await joinCoupleSpreadsheet(token, code, accountName, accountEmail);
       setCoupleSpreadsheetId(data.spreadsheetId);
       setCoupleUserKey(data.userKey);
       setCoupleConfig(data.config);

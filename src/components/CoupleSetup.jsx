@@ -8,7 +8,6 @@ import { useState } from "react";
 export default function CoupleSetup({ userName, userEmail, onCreateCouple, onJoinCouple, loading }) {
   const [tab, setTab] = useState("create");   // "create" | "join"
   const [code, setCode] = useState("");
-  const [partnerName, setPartnerName] = useState("");
   const [partnerEmail, setPartnerEmail] = useState("");
 
   function handleCreate(event) {
@@ -20,7 +19,7 @@ export default function CoupleSetup({ userName, userEmail, onCreateCouple, onJoi
   function handleJoin(event) {
     event.preventDefault();
     if (!code.trim()) return;
-    onJoinCouple(code.trim(), partnerName.trim() || userName);
+    onJoinCouple(code.trim());
   }
 
   return (
@@ -83,16 +82,8 @@ export default function CoupleSetup({ userName, userEmail, onCreateCouple, onJoi
           <form onSubmit={handleJoin} className="couple-setup-form">
             <p className="couple-setup-hint">
               Cole o código da planilha do casal que seu parceiro(a) criou.
-              Você entrará como <strong>usuário B</strong>.
+              Você entrará como <strong>usuário B</strong> com o nome da sua conta Google ({userName}).
             </p>
-            <label>
-              Seu nome (como aparecerá para o parceiro)
-              <input
-                placeholder="Ex.: Ana"
-                value={partnerName}
-                onChange={(e) => setPartnerName(e.target.value)}
-              />
-            </label>
             <label>
               Código da planilha do casal
               <input
