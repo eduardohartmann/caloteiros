@@ -129,11 +129,11 @@ export default function App() {
                 auth={auth}
                 couple={couple}
                 onConfirmReimbursement={(reimbursement) => {
-                  txns.setDraft({ ...reimbursement, id: "", createdAt: "", split: false });
+                  txns.setDraft({ ...reimbursement, id: "", createdAt: "", split: false, lockType: true });
                   navigate(ROUTES.newTransaction);
                 }}
                 onPaymentDraft={(paymentDraft) => {
-                  txns.setDraft({ ...paymentDraft, id: "", createdAt: "", split: false });
+                  txns.setDraft({ ...paymentDraft, id: "", createdAt: "", split: false, lockType: true });
                   navigate(ROUTES.newTransaction);
                 }}
               />

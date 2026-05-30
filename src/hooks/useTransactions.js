@@ -82,6 +82,10 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
       notify("Informe um valor maior que zero.", true);
       return;
     }
+    if (!draft.account) {
+      notify("Selecione uma conta.", true);
+      return;
+    }
     const transaction = {
       ...draft,
       id: draft.id || newId(),
@@ -120,8 +124,6 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
           id: newId(),
           date: transaction.date,
           description: transaction.description,
-          category: transaction.category,
-          account: transaction.account,
           totalAmount: amount,
           amountDue: Number((amount / 2).toFixed(2)),
           status: "pendente",

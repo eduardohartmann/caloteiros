@@ -21,7 +21,7 @@ import { ensureAppFolder, SPREADSHEET_MIME } from "./driveUtils.js";
 import { request, updateValues } from "./sheetsApi.js";
 
 const COUPLE_HEADER = [
-  "id", "data", "descricao", "categoria", "conta",
+  "id", "data", "descricao",
   "valorTotal", "valorDevido", "status",
   "cadastradoPor", "criadoEm",
   "transacaoOrigem", "transacaoPagamento"
@@ -35,15 +35,13 @@ function rowToEntry(row, index) {
     id: row[0],
     date: row[1],
     description: row[2],
-    category: row[3],
-    account: row[4],
-    totalAmount: Number(row[5]) || 0,
-    amountDue: Number(row[6]) || 0,
-    status: row[7] || "pendente",
-    createdBy: row[8] || "",
-    createdAt: row[9] || "",
-    sourceTransactionId: row[10] || "",
-    paymentTransactionId: row[11] || "",
+    totalAmount: Number(row[3]) || 0,
+    amountDue: Number(row[4]) || 0,
+    status: row[5] || "pendente",
+    createdBy: row[6] || "",
+    createdAt: row[7] || "",
+    sourceTransactionId: row[8] || "",
+    paymentTransactionId: row[9] || "",
     rowNumber: index + 2
   };
 }
@@ -53,8 +51,6 @@ function entryToRow(entry) {
     entry.id,
     entry.date,
     entry.description,
-    entry.category,
-    entry.account,
     entry.totalAmount,
     entry.amountDue,
     entry.status,
@@ -69,7 +65,6 @@ function entriesToTransactions(entries) {
   return entries.map((e) => ({
     date: e.date,
     type: "expense",
-    category: e.category,
     amount: e.totalAmount
   }));
 }
@@ -80,7 +75,7 @@ async function loadEntries(token, spreadsheetId) {
   try {
     const result = await request(
       token,
-      `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${COUPLE_SHEET_NAME}!A2:L`)}`
+      `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${COUPLE_SHEET_NAME}!A2:J`)}`
     );
     return (result.values || []).map(rowToEntry).filter(Boolean);
   } catch {
@@ -160,7 +155,7 @@ export async function createCoupleSpreadsheet(token, nameA, emailA) {
   }
 
   await Promise.all([
-    updateValues(token, spreadsheetId, `${COUPLE_SHEET_NAME}!A1:L1`, [COUPLE_HEADER]),
+    updateValues(token, spreadsheetId, `${COUPLE_SHEET_NAME}!A1:J1`, [COUPLE_HEADER]),
     updateValues(token, spreadsheetId, `${SETTINGS_SHEET}!A1:B6`, [
       ["chave", "valor"],
       ["nomeA", nameA],
@@ -254,7 +249,7 @@ export async function loadCoupleSpreadsheet(token, spreadsheetId) {
 export async function saveCoupleEntry(token, spreadsheetId, entry) {
   await request(
     token,
-    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${COUPLE_SHEET_NAME}!A:L`)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${COUPLE_SHEET_NAME}!A:J`)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     { method: "POST", body: JSON.stringify({ values: [entryToRow(entry)] }) }
   );
 
@@ -269,7 +264,7 @@ export async function markEntryAsPaid(token, spreadsheetId, entry, paymentTransa
   await updateValues(
     token,
     spreadsheetId,
-    `${COUPLE_SHEET_NAME}!A${entry.rowNumber}:L${entry.rowNumber}`,
+    `${COUPLE_SHEET_NAME}!A${entry.rowNumber}:J${entry.rowNumber}`,
     [entryToRow(updated)]
   );
   const entries = await loadEntries(token, spreadsheetId);
@@ -283,7 +278,7 @@ export async function confirmEntryPayment(token, spreadsheetId, entry) {
   await updateValues(
     token,
     spreadsheetId,
-    `${COUPLE_SHEET_NAME}!A${entry.rowNumber}:L${entry.rowNumber}`,
+    `${COUPLE_SHEET_NAME}!A${entry.rowNumber}:J${entry.rowNumber}`,
     [entryToRow(updated)]
   );
   const entries = await loadEntries(token, spreadsheetId);

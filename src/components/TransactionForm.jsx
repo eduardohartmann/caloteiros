@@ -28,6 +28,7 @@ export default function TransactionForm({
   const inputRef = useRef(null);
 
   const isTransfer = transaction.type === "transfer";
+  const typeLocked = Boolean(transaction.lockType);
 
   // ── categorias e contas ─────────────────────────────────────────────────────
   const categoryOptions = useMemo(
@@ -137,14 +138,14 @@ export default function TransactionForm({
       <form onSubmit={handleSubmit}>
         <div className="type-toggle" role="group" aria-label="Tipo">
           <label>
-            <input type="radio" name="type" value="expense" checked={transaction.type === "expense"} onChange={() => changeType("expense")} />
+            <input type="radio" name="type" value="expense" checked={transaction.type === "expense"} onChange={() => changeType("expense")} disabled={typeLocked} />
             <span>Despesa</span>
           </label>
           <label>
-            <input type="radio" name="type" value="income" checked={transaction.type === "income"} onChange={() => changeType("income")} />
+            <input type="radio" name="type" value="income" checked={transaction.type === "income"} onChange={() => changeType("income")} disabled={typeLocked} />
             <span>Receita</span>
           </label>
-          {!editing && (
+          {!editing && !typeLocked && (
             <label>
               <input type="radio" name="type" value="transfer" checked={transaction.type === "transfer"} onChange={() => changeType("transfer")} />
               <span>Transferência</span>

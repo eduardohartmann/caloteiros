@@ -142,9 +142,11 @@ function CoupleContent({
                     Paguei
                   </button>
                 )}
-                <button type="button" className="ghost-button settings-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
-                  Excluir
-                </button>
+                {isCreator(entry) && (
+                  <button type="button" className="ghost-button settings-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
+                    Excluir
+                  </button>
+                )}
               </>
             )}
           />
@@ -169,9 +171,11 @@ function CoupleContent({
                     Confirmar recebimento
                   </button>
                 )}
-                <button type="button" className="ghost-button settings-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
-                  Excluir
-                </button>
+                {isCreator(entry) && (
+                  <button type="button" className="ghost-button settings-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
+                    Excluir
+                  </button>
+                )}
               </>
             )}
           />

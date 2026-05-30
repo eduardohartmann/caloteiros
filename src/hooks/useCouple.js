@@ -137,8 +137,8 @@ export default function useCouple(auth, notify, confirm) {
         type: "expense",
         description: `Pagamento - ${entry.description}`,
         amount: entry.amountDue.toFixed(2).replace(".", ","),
-        category: entry.category,
-        account: entry.account,
+        category: "",
+        account: "",
         date: new Date().toISOString().slice(0, 10)
       };
     } catch (error) {
@@ -164,8 +164,8 @@ export default function useCouple(auth, notify, confirm) {
         type: "income",
         description: `Reembolso - ${entry.description}`,
         amount: entry.amountDue.toFixed(2).replace(".", ","),
-        category: entry.category,
-        account: entry.account,
+        category: "",
+        account: "",
         date: new Date().toISOString().slice(0, 10)
       };
     } catch (error) {
