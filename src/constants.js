@@ -1,6 +1,5 @@
 export const SHEET_NAME = "Lancamentos";
 export const SETTINGS_SHEET = "Configuracoes";
-export const SUMMARIES_SHEET = "Resumos";
 export const CATEGORIES_SHEET = "Categorias";
 export const ACCOUNTS_SHEET = "Contas";
 export const COUPLE_SHEET_NAME = "Divisao";

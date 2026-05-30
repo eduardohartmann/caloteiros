@@ -8,9 +8,8 @@
  * Versão atual: 2
  */
 
-import { SHEET_NAME, SUMMARIES_SHEET, CATEGORIES_SHEET, ACCOUNTS_SHEET, SETTINGS_SHEET } from "../constants.js";
+import { SHEET_NAME, CATEGORIES_SHEET, ACCOUNTS_SHEET, SETTINGS_SHEET } from "../constants.js";
 import { request, updateValues, makeRequestFn, makeUpdateFn } from "./sheetsApi.js";
-import { SUMMARIES_HEADER, syncMonthSummaries } from "./summaries.js";
 import { CATEGORIES_HEADER, ACCOUNTS_HEADER, seedCategoriesAndAccounts, loadCategories } from "./settingsSheets.js";
 
 export const CURRENT_VERSION = 2;
@@ -115,14 +114,7 @@ async function migrateToV2(token, spreadsheetId, existingSheets) {
     existingSheets.push(ACCOUNTS_SHEET);
   }
 
-  // 4. Criar aba Resumos se não existe
-  await addSheetIfMissing(token, spreadsheetId, SUMMARIES_SHEET, existingSheets);
-  if (!existingSheets.includes(SUMMARIES_SHEET)) {
-    await updateValues(token, spreadsheetId, `${SUMMARIES_SHEET}!A1:D1`, [SUMMARIES_HEADER]);
-    existingSheets.push(SUMMARIES_SHEET);
-  }
-
-  // 5. Atualizar cabeçalho da aba Lancamentos (adiciona coluna "compartilhado")
+  // 4. Atualizar cabeçalho da aba Lancamentos (adiciona coluna "compartilhado")
   //    Lê o cabeçalho atual para verificar se já tem a coluna
   try {
     const headerResult = await request(
@@ -140,34 +132,5 @@ async function migrateToV2(token, spreadsheetId, existingSheets) {
     }
   } catch {
     // Aba Lancamentos não existe — será criada pelo createSpreadsheet
-  }
-
-  // 6. Recalcular resumos a partir dos lançamentos existentes
-  try {
-    const txResult = await request(
-      token,
-      `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${SHEET_NAME}!A2:K`)}`
-    );
-    const rows = txResult.values || [];
-    if (rows.length > 0) {
-      // Agrupa por mês e recalcula
-      const byMonth = {};
-      for (const row of rows) {
-        if (!row[0] || !row[1]) continue;
-        const month = row[1].slice(0, 7);
-        if (!byMonth[month]) byMonth[month] = [];
-        byMonth[month].push({
-          date: row[1],
-          type: row[2] || "expense",
-          category: row[4] || "Outros",
-          amount: Number(row[6]) || 0
-        });
-      }
-      for (const [month, transactions] of Object.entries(byMonth)) {
-        await syncMonthSummaries(reqFn, updFn, spreadsheetId, month, transactions);
-      }
-    }
-  } catch {
-    // Sem lançamentos — nada a recalcular
   }
 }
