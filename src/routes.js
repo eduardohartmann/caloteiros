@@ -2,6 +2,7 @@ export const ROUTES = {
   welcome: "/",
   overview: "/visao-geral",
   categories: "/categorias",
+  incomes: "/receitas",
   newTransaction: "/novo-lancamento",
   couple: "/casal",
   settings: "/configuracoes"

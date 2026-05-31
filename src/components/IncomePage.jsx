@@ -2,15 +2,15 @@ import { useMemo } from "react";
 import { brl, dateShort } from "../utils/formatters.js";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
 
-export default function CategoryChart({ transactions, categoryMap, onEdit }) {
+export default function IncomePage({ transactions, categoryMap, onEdit }) {
   function resolveCat(id) { return categoryMap?.[id] || id; }
 
-  const expenseTransactions = useMemo(
-    () => transactions.filter((item) => item.type === "expense" && item.category !== TRANSFER_CATEGORY_ID),
+  const incomeTransactions = useMemo(
+    () => transactions.filter((item) => item.type === "income" && item.category !== TRANSFER_CATEGORY_ID),
     [transactions]
   );
 
-  const grouped = expenseTransactions.reduce((result, item) => {
+  const grouped = incomeTransactions.reduce((result, item) => {
     const name = resolveCat(item.category);
     result[name] = (result[name] || 0) + item.amount;
     return result;
@@ -20,34 +20,34 @@ export default function CategoryChart({ transactions, categoryMap, onEdit }) {
 
   return (
     <>
-      <section className="panel spending" id="spending-panel" aria-labelledby="spending-title">
+      <section className="panel spending" id="income-panel" aria-labelledby="income-title">
         <div className="panel-header">
           <div>
-            <h3 id="spending-title">Despesas por categoria</h3>
-            <p>Onde seu dinheiro foi usado</p>
+            <h3 id="income-title">Receitas por categoria</h3>
+            <p>De onde veio seu dinheiro</p>
           </div>
         </div>
         <div className="category-chart">
-          {!groups.length && <div className="empty">Sem despesas neste período.</div>}
+          {!groups.length && <div className="empty">Sem receitas neste período.</div>}
           {groups.map(([category, value]) => (
             <div className="category-row" key={category}>
               <span>{category}</span>
-              <div className="bar"><span style={{ width: `${(value / largest) * 100}%` }} /></div>
+              <div className="bar bar--income"><span style={{ width: `${(value / largest) * 100}%` }} /></div>
               <strong>{brl(value)}</strong>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="panel transactions" aria-labelledby="expense-list-title">
+      <section className="panel transactions" aria-labelledby="income-list-title">
         <div className="panel-header">
           <div>
-            <h3 id="expense-list-title">Lançamentos de despesa</h3>
-            <p>{expenseTransactions.length} {expenseTransactions.length === 1 ? "registro" : "registros"}</p>
+            <h3 id="income-list-title">Lançamentos de receita</h3>
+            <p>{incomeTransactions.length} {incomeTransactions.length === 1 ? "registro" : "registros"}</p>
           </div>
         </div>
         <ul className="transactions-list" role="list">
-          {expenseTransactions.map((transaction) => (
+          {incomeTransactions.map((transaction) => (
             <li
               key={transaction.id}
               className="transaction-card"
@@ -58,8 +58,8 @@ export default function CategoryChart({ transactions, categoryMap, onEdit }) {
             >
               <div className="transaction-card__top">
                 <span className="transaction-card__description">{transaction.description}</span>
-                <span className="transaction-card__amount value expense">
-                  −{brl(transaction.amount)}
+                <span className="transaction-card__amount value income">
+                  +{brl(transaction.amount)}
                 </span>
               </div>
               <div className="transaction-card__bottom">
@@ -70,7 +70,7 @@ export default function CategoryChart({ transactions, categoryMap, onEdit }) {
             </li>
           ))}
         </ul>
-        {!expenseTransactions.length && <div className="empty">Nenhuma despesa neste mês.</div>}
+        {!incomeTransactions.length && <div className="empty">Nenhuma receita neste mês.</div>}
       </section>
     </>
   );
