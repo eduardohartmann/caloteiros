@@ -72,20 +72,21 @@ export default function SummaryCards({ transactions, allTransactions = [], month
           <span>Saldo total</span>
           <strong>{brl(accumulatedBalance)}</strong>
         </article>
-        <article className="metric income">
-          <span>Receitas</span>
-          <strong>{brl(income)}</strong>
-          <small>Entradas do mês</small>
-        </article>
-        <article className="metric expense">
-          <span>Despesas</span>
-          <strong>{brl(expense)}</strong>
-          <small>Saídas do mês</small>
-        </article>
-        <article className="metric month-balance">
-          <span>Saldo do mês</span>
-          <strong>{brl(income - expense)}</strong>
-          <small>Receitas menos despesas</small>
+        <article className="metric month-summary">
+          <div className="month-summary-item">
+            <span>Receitas</span>
+            <strong className="income-value">{brl(income)}</strong>
+          </div>
+          <div className="month-summary-divider" />
+          <div className="month-summary-item">
+            <span>Despesas</span>
+            <strong className="expense-value">{brl(expense)}</strong>
+          </div>
+          <div className="month-summary-divider" />
+          <div className="month-summary-item">
+            <span>Saldo do mês</span>
+            <strong className="balance-value">{brl(income - expense)}</strong>
+          </div>
         </article>
       </section>
 

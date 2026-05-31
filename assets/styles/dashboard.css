@@ -186,6 +186,45 @@
   color: var(--teal-dark);
 }
 
+/* Card consolidado: receitas + despesas + saldo do mês */
+.metric.month-summary {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: auto;
+  padding: 20px 25px;
+}
+
+.month-summary-item {
+  flex: 1;
+  text-align: center;
+}
+
+.month-summary-item span {
+  color: var(--muted);
+  display: block;
+  font-size: .78rem;
+  margin-bottom: 8px;
+}
+
+.month-summary-item strong {
+  display: block;
+  font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+  letter-spacing: -.04em;
+}
+
+.month-summary-item .income-value { color: var(--green); }
+.month-summary-item .expense-value { color: var(--red); }
+.month-summary-item .balance-value { color: var(--teal-dark); }
+
+.month-summary-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
 .metric {
   min-height: 128px;
   padding: 23px 25px;
@@ -220,8 +259,6 @@
 }
 
 .metric.balance span, .metric.balance small { color: #dcf2ed; }
-.metric.income strong { color: var(--green); }
-.metric.expense strong { color: var(--red); }
 
 .content-grid {
   display: grid;

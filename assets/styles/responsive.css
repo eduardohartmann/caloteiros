@@ -187,9 +187,23 @@
     grid-column: 1 / -1;
   }
 
-  /* saldo do mês ocupa linha inteira */
-  .metric.month-balance {
+  /* card consolidado no mobile */
+  .metric.month-summary {
     grid-column: 1 / -1;
+    padding: 16px 14px;
+    gap: 8px;
+  }
+
+  .month-summary-item strong {
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+  }
+
+  .month-summary-item span {
+    font-size: .7rem;
+  }
+
+  .month-summary-divider {
+    height: 32px;
   }
 
   .metric {
