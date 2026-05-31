@@ -23,9 +23,9 @@ export default function App() {
   const { toast, notify } = useToast();
   const { confirm, confirmProps } = useConfirm();
   const auth = useAuth(notify);
+  const settings = useSettings(auth);
   const couple = useCouple(auth, notify, confirm);
   const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings);
-  const settings = useSettings(auth);
 
   function handleDisconnect() {
     auth.disconnect();
