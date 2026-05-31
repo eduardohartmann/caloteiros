@@ -93,7 +93,7 @@ export default function App() {
 
           {route === ROUTES.overview && (
             <div className="route-page">
-              <OverviewPage txns={txns} settings={settings} />
+              <OverviewPage txns={txns} settings={settings} onExpenseClick={() => navigate(ROUTES.categories)} />
             </div>
           )}
 

@@ -7,7 +7,7 @@ import { TRANSFER_CATEGORY_ID } from "../constants.js";
  * Cards de resumo financeiro.
  * Calcula tudo diretamente das transações (fonte da verdade).
  */
-export default function SummaryCards({ transactions, allTransactions = [], month, accounts = [] }) {
+export default function SummaryCards({ transactions, allTransactions = [], month, accounts = [], onExpenseClick }) {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const txnsForBalance = allTransactions.length > 0 ? allTransactions : transactions;
@@ -78,7 +78,14 @@ export default function SummaryCards({ transactions, allTransactions = [], month
             <strong className="income-value">{brl(income)}</strong>
           </div>
           <div className="month-summary-divider" />
-          <div className="month-summary-item">
+          <div
+            className="month-summary-item clickable"
+            onClick={onExpenseClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === "Enter" && onExpenseClick?.()}
+            title="Ver despesas por categoria"
+          >
             <span>Despesas</span>
             <strong className="expense-value">{brl(expense)}</strong>
           </div>
