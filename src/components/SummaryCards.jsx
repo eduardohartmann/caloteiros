@@ -7,7 +7,7 @@ import { TRANSFER_CATEGORY_ID } from "../constants.js";
  * Cards de resumo financeiro.
  * Calcula tudo diretamente das transações (fonte da verdade).
  */
-export default function SummaryCards({ transactions, allTransactions = [], month, accounts = [], onExpenseClick }) {
+export default function SummaryCards({ transactions, allTransactions = [], month, accounts = [], onExpenseClick, onIncomeClick }) {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const txnsForBalance = allTransactions.length > 0 ? allTransactions : transactions;
@@ -25,7 +25,6 @@ export default function SummaryCards({ transactions, allTransactions = [], month
   }, [transactions]);
 
   // Saldo acumulado até o mês selecionado (exclui transferências)
-  // Calculado diretamente das transações — fonte da verdade
   const accumulatedBalance = useMemo(() => {
     let inc = 0;
     let exp = 0;
@@ -73,7 +72,14 @@ export default function SummaryCards({ transactions, allTransactions = [], month
           <strong>{brl(accumulatedBalance)}</strong>
         </article>
         <article className="metric month-summary">
-          <div className="month-summary-item">
+          <div
+            className="month-summary-item clickable"
+            onClick={onIncomeClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === "Enter" && onIncomeClick?.()}
+            title="Ver receitas do mês"
+          >
             <span>Receitas</span>
             <strong className="income-value">{brl(income)}</strong>
           </div>
@@ -84,16 +90,15 @@ export default function SummaryCards({ transactions, allTransactions = [], month
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && onExpenseClick?.()}
-            title="Ver despesas por categoria"
+            title="Ver despesas do mês"
           >
             <span>Despesas</span>
             <strong className="expense-value">{brl(expense)}</strong>
           </div>
-          <div className="month-summary-divider" />
-          <div className="month-summary-item">
-            <span>Saldo do mês</span>
-            <strong className="balance-value">{brl(income - expense)}</strong>
-          </div>
+        </article>
+        <article className="metric month-balance-card">
+          <span>Saldo do mês</span>
+          <strong>{brl(income - expense)}</strong>
         </article>
       </section>
 

@@ -2,6 +2,7 @@ import CategoryChart from "./components/CategoryChart.jsx";
 import ConfirmModal from "./components/ConfirmModal.jsx";
 import CouplePage from "./components/CouplePage.jsx";
 import DashboardHeader from "./components/DashboardHeader.jsx";
+import IncomePage from "./components/IncomePage.jsx";
 import OverviewPage from "./components/OverviewPage.jsx";
 import SettingsRoute from "./components/SettingsRoute.jsx";
 import Sidebar from "./components/Sidebar.jsx";
@@ -67,7 +68,8 @@ export default function App() {
   // ── dashboard ───────────────────────────────────────────────────────────────
   const routeTitle = {
     [ROUTES.overview]: "Visão geral",
-    [ROUTES.categories]: "Despesas por categoria",
+    [ROUTES.categories]: "Despesas",
+    [ROUTES.incomes]: "Receitas",
     [ROUTES.newTransaction]: txns.draft.id ? "Editar lançamento" : "Novo lançamento",
     [ROUTES.couple]: "Casal",
     [ROUTES.settings]: "Configurações"
@@ -93,7 +95,12 @@ export default function App() {
 
           {route === ROUTES.overview && (
             <div className="route-page">
-              <OverviewPage txns={txns} settings={settings} onExpenseClick={() => navigate(ROUTES.categories)} />
+              <OverviewPage
+                txns={txns}
+                settings={settings}
+                onExpenseClick={() => navigate(ROUTES.categories)}
+                onIncomeClick={() => navigate(ROUTES.incomes)}
+              />
             </div>
           )}
 
@@ -102,6 +109,17 @@ export default function App() {
               <CategoryChart
                 transactions={txns.visibleTransactions}
                 categoryMap={settings.categoryMap}
+                onEdit={txns.editTransaction}
+              />
+            </div>
+          )}
+
+          {route === ROUTES.incomes && (
+            <div className="route-page route-page--wide">
+              <IncomePage
+                transactions={txns.visibleTransactions}
+                categoryMap={settings.categoryMap}
+                onEdit={txns.editTransaction}
               />
             </div>
           )}
