@@ -257,14 +257,30 @@ export async function saveCoupleEntry(token, spreadsheetId, entry) {
   return { entries };
 }
 
+// ─── helper: buscar rowNumber atualizado pelo id ─────────────────────────────
+
+async function findEntryRowNumber(token, spreadsheetId, entryId) {
+  const result = await request(
+    token,
+    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${COUPLE_SHEET_NAME}!A2:A`)}`
+  );
+  const ids = result.values || [];
+  const index = ids.findIndex((row) => row[0] === entryId);
+  if (index === -1) throw new Error("Lançamento não encontrado na planilha.");
+  return index + 2; // +2 porque começa na linha 2 (cabeçalho na 1)
+}
+
 // ─── parceiro marca "Paguei" ──────────────────────────────────────────────────
 
 export async function markEntryAsPaid(token, spreadsheetId, entry, paymentTransactionId = "") {
+  // #3 - Busca rowNumber atualizado antes de escrever
+  const freshRowNumber = await findEntryRowNumber(token, spreadsheetId, entry.id);
+
   const updated = { ...entry, status: "pago", paymentTransactionId };
   await updateValues(
     token,
     spreadsheetId,
-    `${COUPLE_SHEET_NAME}!A${entry.rowNumber}:J${entry.rowNumber}`,
+    `${COUPLE_SHEET_NAME}!A${freshRowNumber}:J${freshRowNumber}`,
     [entryToRow(updated)]
   );
   const entries = await loadEntries(token, spreadsheetId);
@@ -274,11 +290,14 @@ export async function markEntryAsPaid(token, spreadsheetId, entry, paymentTransa
 // ─── criador confirma recebimento ─────────────────────────────────────────────
 
 export async function confirmEntryPayment(token, spreadsheetId, entry) {
+  // #3 - Busca rowNumber atualizado antes de escrever
+  const freshRowNumber = await findEntryRowNumber(token, spreadsheetId, entry.id);
+
   const updated = { ...entry, status: "confirmado" };
   await updateValues(
     token,
     spreadsheetId,
-    `${COUPLE_SHEET_NAME}!A${entry.rowNumber}:J${entry.rowNumber}`,
+    `${COUPLE_SHEET_NAME}!A${freshRowNumber}:J${freshRowNumber}`,
     [entryToRow(updated)]
   );
   const entries = await loadEntries(token, spreadsheetId);
@@ -288,6 +307,9 @@ export async function confirmEntryPayment(token, spreadsheetId, entry) {
 // ─── excluir lançamento compartilhado ────────────────────────────────────────
 
 export async function deleteCoupleEntry(token, spreadsheetId, entry) {
+  // #3 - Busca rowNumber atualizado antes de excluir
+  const freshRowNumber = await findEntryRowNumber(token, spreadsheetId, entry.id);
+
   const metadata = await request(token, `spreadsheets/${spreadsheetId}?fields=sheets.properties`);
   const sheet = metadata.sheets.find((s) => s.properties.title === COUPLE_SHEET_NAME);
 
@@ -296,7 +318,7 @@ export async function deleteCoupleEntry(token, spreadsheetId, entry) {
     body: JSON.stringify({
       requests: [{
         deleteDimension: {
-          range: { sheetId: sheet.properties.sheetId, dimension: "ROWS", startIndex: entry.rowNumber - 1, endIndex: entry.rowNumber }
+          range: { sheetId: sheet.properties.sheetId, dimension: "ROWS", startIndex: freshRowNumber - 1, endIndex: freshRowNumber }
         }
       }]
     })
