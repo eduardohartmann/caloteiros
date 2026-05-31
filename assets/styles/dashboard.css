@@ -174,24 +174,12 @@
   grid-column: 1 / -1;
 }
 
-/* Saldo do mês ocupa linha inteira */
-.metric.month-balance {
-  grid-column: 1 / -1;
-  color: var(--ink);
-  background: var(--surface-soft);
-  border-color: var(--line);
-}
-
-.metric.month-balance strong {
-  color: var(--teal-dark);
-}
-
-/* Card consolidado: receitas + despesas + saldo do mês */
+/* Card consolidado: receitas + despesas */
 .metric.month-summary {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   min-height: auto;
   padding: 20px 25px;
 }
@@ -216,7 +204,6 @@
 
 .month-summary-item .income-value { color: var(--green); }
 .month-summary-item .expense-value { color: var(--red); }
-.month-summary-item .balance-value { color: var(--teal-dark); }
 
 .month-summary-divider {
   width: 1px;
@@ -235,6 +222,26 @@
 
 .month-summary-item.clickable:hover {
   background: var(--teal-soft);
+}
+
+/* Saldo do mês — card separado abaixo */
+.metric.month-balance-card {
+  grid-column: 1 / -1;
+  min-height: auto;
+  padding: 18px 25px;
+  text-align: center;
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+.metric.month-balance-card strong {
+  color: var(--teal-dark);
+  margin-bottom: 0;
+}
+
+/* Barra de receita (cor verde) */
+.bar--income span {
+  background: var(--green);
 }
 
 .metric {

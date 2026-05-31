@@ -177,7 +177,7 @@
 
   /* ── cards de resumo ── */
   .cards {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 16px;
   }
@@ -204,6 +204,12 @@
 
   .month-summary-divider {
     height: 32px;
+  }
+
+  .metric.month-balance-card {
+    grid-column: 1 / -1;
+    padding: 14px 16px;
+    min-height: auto;
   }
 
   .metric {

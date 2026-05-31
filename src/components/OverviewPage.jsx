@@ -5,7 +5,7 @@ import TransactionsTable from "./TransactionsTable.jsx";
  * OverviewPage
  * Página de visão geral com cards de resumo e tabela de lançamentos.
  */
-export default function OverviewPage({ txns, settings, onExpenseClick }) {
+export default function OverviewPage({ txns, settings, onExpenseClick, onIncomeClick }) {
   return (
     <>
       <SummaryCards
@@ -14,6 +14,7 @@ export default function OverviewPage({ txns, settings, onExpenseClick }) {
         month={txns.month}
         accounts={settings.accounts}
         onExpenseClick={onExpenseClick}
+        onIncomeClick={onIncomeClick}
       />
       <TransactionsTable
         transactions={txns.visibleTransactions}
