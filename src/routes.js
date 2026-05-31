@@ -9,7 +9,6 @@ export const ROUTES = {
 
 export const DASHBOARD_ROUTES = [
   { id: "overview",        path: ROUTES.overview,        label: "Visão geral",            shortLabel: "Início",   icon: "▦" },
-  { id: "categories",      path: ROUTES.categories,      label: "Despesas por categoria", shortLabel: "Categorias", icon: "◫" },
   { id: "newTransaction",  path: ROUTES.newTransaction,  label: "Novo lançamento",        shortLabel: "Novo",     icon: "＋" },
   { id: "couple",          path: ROUTES.couple,          label: "Casal",                  shortLabel: "Casal",    icon: "♡" },
   { id: "settings",        path: ROUTES.settings,        label: "Configurações",          shortLabel: "Config",   icon: "⚙" }
