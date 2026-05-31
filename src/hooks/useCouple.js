@@ -63,6 +63,38 @@ export default function useCouple(auth, notify, confirm) {
       .finally(() => setCoupleLoading(false));
   }, [token, coupleSpreadsheetId, coupleReady]);
 
+  // #2 - Retry de splits pendentes ao carregar
+  useEffect(() => {
+    if (!coupleReady || !coupleSpreadsheetId || !token) return;
+    const pending = JSON.parse(localStorage.getItem("caloteiros.pendingSplits") || "[]");
+    if (pending.length === 0) return;
+
+    (async () => {
+      const failed = [];
+      for (const entry of pending) {
+        try {
+          await saveCoupleEntry(token, coupleSpreadsheetId, entry);
+        } catch {
+          failed.push(entry);
+        }
+      }
+      if (failed.length > 0) {
+        localStorage.setItem("caloteiros.pendingSplits", JSON.stringify(failed));
+      } else {
+        localStorage.removeItem("caloteiros.pendingSplits");
+      }
+      // Recarrega entradas após retry bem-sucedido
+      if (pending.length > failed.length) {
+        const data = await loadCoupleSpreadsheet(token, coupleSpreadsheetId);
+        setCoupleEntries(data.entries);
+        if (failed.length > 0) {
+          notify(`${pending.length - failed.length} lançamentos pendentes sincronizados. ${failed.length} ainda pendentes.`, true);
+        }
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coupleReady, coupleSpreadsheetId, token]);
+
   // ── ações ───────────────────────────────────────────────────────────────────
 
   async function handleCreateCouple(partnerEmail) {

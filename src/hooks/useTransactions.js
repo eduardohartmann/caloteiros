@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { deleteSheetTransaction, saveSheetTransaction } from "../services/googleSheets.js";
+import { deleteSheetTransaction, deleteLinkedTransactions, saveSheetTransaction, saveLinkedTransactions } from "../services/googleSheets.js";
 import { TokenExpiredError } from "../services/sheetsApi.js";
+import { TRANSFER_CATEGORY_ID } from "../constants.js";
 import { currentRoute, navigate, ROUTES } from "../routes.js";
 import { amountFromInput, monthNow, newId, today } from "../utils/formatters.js";
 
@@ -22,14 +23,19 @@ function emptyTransaction() {
  * useTransactions
  * Gerencia transações pessoais, filtros, formulário e sugestões de autocomplete.
  */
-export default function useTransactions(auth, notify, confirm, onSplit) {
+export default function useTransactions(auth, notify, confirm, onSplit, settings) {
   const { token, spreadsheetId, transactionSheetId, sheetData, handleTokenExpired } = auth;
 
   const [transactions, setTransactions] = useState([]);
   const [allTransactions, setAllTransactions] = useState([]);
   const [transactionsReady, setTransactionsReady] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
-  const [month, setMonth] = useState(monthNow);
+  const [saving, setSaving] = useState(false);
+
+  // #6 - Restaurar mês selecionado do localStorage
+  const [month, setMonth] = useState(() => {
+    return localStorage.getItem("caloteiros.selectedMonth") || monthNow();
+  });
 
   function changeMonth(newMonth) {
     setMonth(newMonth);
@@ -57,16 +63,26 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
     }
   }, [sheetData]);
 
-  // Transações filtradas por mês e busca
+  // #11 - Transações filtradas por mês e busca (resolve IDs para nomes)
   const visibleTransactions = useMemo(() => {
     const source = allTransactions.length > 0 ? allTransactions : transactions;
     const query = search.trim().toLocaleLowerCase("pt-BR");
+
+    const catMap = settings?.categoryMap || {};
+    const accMap = settings?.accountMap || {};
+
     return source
       .filter((t) => t.date.startsWith(month))
-      .filter((t) => !query ||
-        `${t.description} ${t.category} ${t.account}`.toLocaleLowerCase("pt-BR").includes(query))
+      .filter((t) => {
+        if (!query) return true;
+        const catName = catMap[t.category] || t.category;
+        const accName = accMap[t.account] || t.account;
+        return `${t.description} ${catName} ${accName}`
+          .toLocaleLowerCase("pt-BR")
+          .includes(query);
+      })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [allTransactions, transactions, month, search]);
+  }, [allTransactions, transactions, month, search, settings?.categoryMap, settings?.accountMap]);
 
   function resetForm() {
     setDraft(emptyTransaction());
@@ -77,6 +93,9 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
 
   async function saveTransaction(event) {
     event.preventDefault();
+    // #10 - Proteção contra double submit
+    if (saving) return;
+
     const amount = amountFromInput(draft.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       notify("Informe um valor maior que zero.", true);
@@ -86,21 +105,32 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
       notify("Selecione uma conta.", true);
       return;
     }
+
+    // #7 - Validação de description antes do split
+    const trimmedDescription = draft.description.trim();
+    if (!trimmedDescription) {
+      notify("Informe uma descrição.", true);
+      return;
+    }
+
     const transaction = {
       ...draft,
       id: draft.id || newId(),
-      description: draft.description.trim(),
+      description: trimmedDescription,
       amount,
       createdAt: draft.createdAt || new Date().toISOString()
     };
-    const current = transactions.find((item) => item.id === transaction.id);
+    const current = allTransactions.find((item) => item.id === transaction.id) ||
+      transactions.find((item) => item.id === transaction.id);
+
+    setSaving(true);
     try {
       const txnMonth = transaction.date.slice(0, 7);
-      let result = await saveSheetTransaction(token, spreadsheetId, transaction, current, txnMonth);
+      let result;
 
-      // Se é uma transação vinculada (transferência), atualiza a outra também
+      // #4 - Se é edição de transação vinculada, usa batch update atômico
       if (transaction.linkedId && current) {
-        const linked = result.allTransactions.find((t) => t.id === transaction.linkedId);
+        const linked = allTransactions.find((t) => t.id === transaction.linkedId);
         if (linked) {
           const updatedLinked = {
             ...linked,
@@ -108,8 +138,17 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
             description: transaction.description,
             amount: transaction.amount
           };
-          result = await saveSheetTransaction(token, spreadsheetId, updatedLinked, linked, txnMonth);
+          result = await saveLinkedTransactions(
+            token, spreadsheetId,
+            transaction, current,
+            updatedLinked, linked,
+            txnMonth
+          );
+        } else {
+          result = await saveSheetTransaction(token, spreadsheetId, transaction, current, txnMonth);
         }
+      } else {
+        result = await saveSheetTransaction(token, spreadsheetId, transaction, current, txnMonth);
       }
 
       setTransactions(result.transactions);
@@ -118,21 +157,39 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
       // Navega para o mês da transação
       if (txnMonth !== month) changeMonth(txnMonth);
 
-      // Se marcou "Dividir com parceiro", salva na planilha do casal
+      // #2 + #7 + #9 - Dividir com parceiro (com try/catch e precisão corrigida)
       if (transaction.split && onSplit && !current) {
+        // #9 - Precisão: divisão inteira em centavos
+        const totalCents = Math.round(amount * 100);
+        const halfCents = Math.floor(totalCents / 2);
+        const amountDue = halfCents / 100;
+
         const coupleEntry = {
           id: newId(),
           date: transaction.date,
           description: transaction.description,
           totalAmount: amount,
-          amountDue: Number((amount / 2).toFixed(2)),
+          amountDue,
           status: "pendente",
           createdBy: auth.accountName,
           createdAt: new Date().toISOString(),
           sourceTransactionId: transaction.id,
           paymentTransactionId: ""
         };
-        onSplit(coupleEntry);
+
+        // #2 - Try/catch no split com retry queue
+        try {
+          await onSplit(coupleEntry);
+        } catch (splitError) {
+          notify(
+            "Lançamento salvo, mas não foi possível compartilhar com o parceiro(a). Tente novamente pela aba Casal.",
+            true
+          );
+          // Salva em localStorage para retry posterior
+          const pending = JSON.parse(localStorage.getItem("caloteiros.pendingSplits") || "[]");
+          pending.push(coupleEntry);
+          localStorage.setItem("caloteiros.pendingSplits", JSON.stringify(pending));
+        }
       }
 
       // Atualiza sugestões
@@ -152,12 +209,30 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
 
       resetForm();
       notify(current ? "Lançamento atualizado." : "Lançamento salvo.");
-    } catch (error) { handleError(error); }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setSaving(false);
+    }
   }
 
+  // #5 - Edição de transferência detecta linked e popula destinationAccount
   function editTransaction(transaction) {
     setPreviousRoute(currentRoute());
-    setDraft({ ...transaction, amount: transaction.amount.toFixed(2).replace(".", ",") });
+
+    const isLinkedTransfer = transaction.linkedId && transaction.category === TRANSFER_CATEGORY_ID;
+
+    if (isLinkedTransfer) {
+      const linked = allTransactions.find((t) => t.id === transaction.linkedId);
+      setDraft({
+        ...transaction,
+        type: "transfer",
+        amount: transaction.amount.toFixed(2).replace(".", ","),
+        destinationAccount: linked?.account || ""
+      });
+    } else {
+      setDraft({ ...transaction, amount: transaction.amount.toFixed(2).replace(".", ",") });
+    }
     navigate(ROUTES.newTransaction);
   }
 
@@ -173,22 +248,21 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
     const ok = await confirm(confirmMsg, "Excluir lançamento");
     if (!ok) return;
 
+    setSaving(true);
     try {
       if (linked) {
-        // Exclui na ordem correta para não invalidar rowNumbers
-        const first = linked.rowNumber > transaction.rowNumber ? linked : transaction;
-        const second = linked.rowNumber > transaction.rowNumber ? transaction : linked;
-        await deleteSheetTransaction(token, spreadsheetId, transactionSheetId, first, month);
-        // Após excluir a de rowNumber maior, a menor não muda
-        const result = await deleteSheetTransaction(token, spreadsheetId, transactionSheetId, second, month);
+        // #1 - Batch delete atômico para transferências vinculadas
+        const result = await deleteLinkedTransactions(
+          token, spreadsheetId, transactionSheetId, transaction, linked, month
+        );
         setTransactions(result.transactions);
         setAllTransactions(result.allTransactions || []);
-          setSuggestions(result.suggestions || []);
+        setSuggestions(result.suggestions || []);
       } else {
         const result = await deleteSheetTransaction(token, spreadsheetId, transactionSheetId, transaction, month);
         setTransactions(result.transactions);
         setAllTransactions(result.allTransactions || []);
-          setSuggestions(result.suggestions || []);
+        setSuggestions(result.suggestions || []);
       }
 
       const back = previousRoute || ROUTES.overview;
@@ -196,10 +270,17 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
       setDraft(emptyTransaction());
       navigate(back);
       notify(linked ? "Transferência excluída." : "Lançamento excluído.");
-    } catch (error) { handleError(error); }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function transferBetweenAccounts(transferData) {
+    // #10 - Proteção contra double submit
+    if (saving) return;
+
     const amount = amountFromInput(transferData.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       notify("Informe um valor maior que zero.", true);
@@ -239,6 +320,7 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
       linkedId: outgoingId
     };
 
+    setSaving(true);
     try {
       await saveSheetTransaction(token, spreadsheetId, outgoing, null, txnMonth);
       const result = await saveSheetTransaction(token, spreadsheetId, incoming, null, txnMonth);
@@ -247,7 +329,11 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
       if (txnMonth !== month) changeMonth(txnMonth);
       resetForm();
       notify("Transferência realizada.");
-    } catch (error) { handleError(error); }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return {
@@ -255,6 +341,6 @@ export default function useTransactions(auth, notify, confirm, onSplit) {
     month, setMonth: changeMonth, search, setSearch,
     draft, setDraft, resetForm,
     saveTransaction, editTransaction, removeTransaction, transferBetweenAccounts,
-    transactionsReady
+    transactionsReady, saving
   };
 }

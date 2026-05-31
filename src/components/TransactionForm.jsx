@@ -21,13 +21,17 @@ export default function TransactionForm({
   onTransfer,
   categories: dynamicCategories,
   accounts: dynamicAccounts,
-  suggestions = []
+  suggestions = [],
+  saving = false
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [destinationAccount, setDestinationAccount] = useState("");
+  const [destinationAccount, setDestinationAccount] = useState(
+    () => transaction.destinationAccount || ""
+  );
   const inputRef = useRef(null);
 
-  const isTransfer = transaction.type === "transfer";
+  const isTransfer = transaction.type === "transfer" ||
+    (editing && transaction.category === TRANSFER_CATEGORY_ID && transaction.linkedId);
   const typeLocked = Boolean(transaction.lockType);
 
   // ── categorias e contas ─────────────────────────────────────────────────────
@@ -137,19 +141,27 @@ export default function TransactionForm({
       </div>
       <form onSubmit={handleSubmit}>
         <div className="type-toggle" role="group" aria-label="Tipo">
-          <label>
-            <input type="radio" name="type" value="expense" checked={transaction.type === "expense"} onChange={() => changeType("expense")} disabled={typeLocked} />
-            <span>Despesa</span>
-          </label>
-          <label>
-            <input type="radio" name="type" value="income" checked={transaction.type === "income"} onChange={() => changeType("income")} disabled={typeLocked} />
-            <span>Receita</span>
-          </label>
-          {!editing && !typeLocked && (
-            <label>
-              <input type="radio" name="type" value="transfer" checked={transaction.type === "transfer"} onChange={() => changeType("transfer")} />
-              <span>Transferência</span>
+          {isTransfer && editing ? (
+            <label className="type-toggle-info">
+              <span>Transferência entre contas</span>
             </label>
+          ) : (
+            <>
+              <label>
+                <input type="radio" name="type" value="expense" checked={transaction.type === "expense"} onChange={() => changeType("expense")} disabled={typeLocked} />
+                <span>Despesa</span>
+              </label>
+              <label>
+                <input type="radio" name="type" value="income" checked={transaction.type === "income"} onChange={() => changeType("income")} disabled={typeLocked} />
+                <span>Receita</span>
+              </label>
+              {!editing && !typeLocked && (
+                <label>
+                  <input type="radio" name="type" value="transfer" checked={transaction.type === "transfer"} onChange={() => changeType("transfer")} />
+                  <span>Transferência</span>
+                </label>
+              )}
+            </>
           )}
         </div>
 
@@ -254,8 +266,11 @@ export default function TransactionForm({
           </>
         )}
 
-        <button className="primary-button" type="submit">
-          {isTransfer ? "Transferir" : editing ? "Atualizar lançamento" : "Salvar lançamento"}
+        <button className="primary-button" type="submit" disabled={saving}>
+          {saving
+            ? "Salvando…"
+            : isTransfer ? "Transferir" : editing ? "Atualizar lançamento" : "Salvar lançamento"
+          }
         </button>
 
         {editing && onRemove && (

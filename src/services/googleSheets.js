@@ -405,8 +405,6 @@ export async function saveSheetTransaction(token, spreadsheetId, transaction, cu
 // ─── excluir transação ────────────────────────────────────────────────────────
 
 export async function deleteSheetTransaction(token, spreadsheetId, transactionSheetId, transaction, currentMonth) {
-  const affectedMonth = transaction.date.slice(0, 7);
-
   await request(token, `spreadsheets/${spreadsheetId}:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({
@@ -425,4 +423,62 @@ export async function deleteSheetTransaction(token, spreadsheetId, transactionSh
   const suggestions = buildSuggestions(allTransactions);
 
   return { spreadsheetId, transactions, allTransactions, suggestions };
+}
+
+/**
+ * Exclui duas transações vinculadas (transferência) atomicamente via batchUpdate.
+ * Ordena por rowNumber decrescente para não invalidar índices.
+ */
+export async function deleteLinkedTransactions(token, spreadsheetId, transactionSheetId, txnA, txnB, currentMonth) {
+  const sorted = [txnA, txnB].sort((a, b) => b.rowNumber - a.rowNumber);
+
+  await request(token, `spreadsheets/${spreadsheetId}:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({
+      requests: sorted.map((t) => ({
+        deleteDimension: {
+          range: {
+            sheetId: transactionSheetId,
+            dimension: "ROWS",
+            startIndex: t.rowNumber - 1,
+            endIndex: t.rowNumber
+          }
+        }
+      }))
+    })
+  });
+
+  const allTransactions = await loadAllTransactions(token, spreadsheetId);
+  const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
+  const suggestions = buildSuggestions(allTransactions);
+
+  return { spreadsheetId, transactions, allTransactions, suggestions };
+}
+
+/**
+ * Atualiza duas transações vinculadas atomicamente via values:batchUpdate.
+ */
+export async function saveLinkedTransactions(token, spreadsheetId, txnA, currentA, txnB, currentB, currentMonth) {
+  const rowA = toRow({ ...txnA, createdAt: currentA.createdAt });
+  const rowB = toRow({ ...txnB, createdAt: currentB.createdAt });
+
+  await request(
+    token,
+    `spreadsheets/${spreadsheetId}/values:batchUpdate`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        valueInputOption: "USER_ENTERED",
+        data: [
+          { range: `${SHEET_NAME}!A${currentA.rowNumber}:L${currentA.rowNumber}`, values: [rowA] },
+          { range: `${SHEET_NAME}!A${currentB.rowNumber}:L${currentB.rowNumber}`, values: [rowB] }
+        ]
+      })
+    }
+  );
+
+  const allTransactions = await loadAllTransactions(token, spreadsheetId);
+  const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
+
+  return { spreadsheetId, transactions, allTransactions };
 }

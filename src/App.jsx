@@ -24,7 +24,7 @@ export default function App() {
   const { confirm, confirmProps } = useConfirm();
   const auth = useAuth(notify);
   const couple = useCouple(auth, notify, confirm);
-  const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry));
+  const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings);
   const settings = useSettings(auth);
 
   function handleDisconnect() {
@@ -119,6 +119,7 @@ export default function App() {
                 categories={settings.categories}
                 accounts={settings.accounts}
                 suggestions={txns.suggestions}
+                saving={txns.saving}
               />
             </div>
           )}
