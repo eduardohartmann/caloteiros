@@ -45,8 +45,17 @@ export function amountFromInput(value) {
  *   "0,99"    → "0,99"
  */
 export function maskCurrency(raw) {
+  // Converte ponto digitado em vírgula (teclado decimal usa ponto)
+  // Só converte se ainda não há vírgula no valor (para não conflitar com milhar)
+  let value = raw;
+  if (!value.includes(",") && value.includes(".")) {
+    // Substitui o último ponto por vírgula (separador decimal)
+    const lastDot = value.lastIndexOf(".");
+    value = value.slice(0, lastDot) + "," + value.slice(lastDot + 1);
+  }
+
   // Remove tudo que não é dígito ou vírgula
-  let value = raw.replace(/[^\d,]/g, "");
+  value = value.replace(/[^\d,]/g, "");
 
   // Se ficou vazio, retorna vazio
   if (!value) return "";
