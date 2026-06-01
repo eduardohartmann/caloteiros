@@ -63,15 +63,28 @@ function CoupleContent({
   const nameB = config.nomeB || "Usuário B";
   const partnerName = userKey === "A" ? nameB : nameA;
 
-  // Filtra por mês
-  const monthEntries = useMemo(
-    () => entries.filter((e) => e.date.startsWith(month)).sort((a, b) => b.date.localeCompare(a.date)),
+  // Pendentes e aguardando confirmação: acumula meses anteriores (dívida não some ao trocar mês)
+  // Confirmados: apenas o mês selecionado (histórico resolvido)
+  const pending = useMemo(
+    () => entries
+      .filter((e) => e.status === "pendente" && e.date.slice(0, 7) <= month)
+      .sort((a, b) => b.date.localeCompare(a.date)),
     [entries, month]
   );
 
-  const pending = monthEntries.filter((e) => e.status === "pendente");
-  const paid = monthEntries.filter((e) => e.status === "pago");
-  const confirmed = monthEntries.filter((e) => e.status === "confirmado");
+  const paid = useMemo(
+    () => entries
+      .filter((e) => e.status === "pago" && e.date.slice(0, 7) <= month)
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [entries, month]
+  );
+
+  const confirmed = useMemo(
+    () => entries
+      .filter((e) => e.status === "confirmado" && e.date.startsWith(month))
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [entries, month]
+  );
 
   // Resumo
   const totalDue = pending.reduce((s, e) => s + e.amountDue, 0);
@@ -185,7 +198,7 @@ function CoupleContent({
         </section>
       )}
 
-      {monthEntries.length === 0 && (
+      {pending.length === 0 && paid.length === 0 && confirmed.length === 0 && (
         <div className="panel">
           <div className="empty">Nenhum lançamento compartilhado neste mês. Use o checkbox "Dividir com parceiro(a)" ao cadastrar um lançamento.</div>
         </div>
