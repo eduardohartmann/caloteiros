@@ -32,27 +32,21 @@ export function amountFromInput(value) {
 }
 
 /**
- * Aplica máscara monetária brasileira ao valor digitado.
- * - Separador de milhar: .
- * - Separador decimal: ,
- * - Máximo 2 casas decimais
+ * Filtra entrada do campo de valor, permitindo apenas dígitos e um separador decimal.
+ * Aceita vírgula ou ponto como separador decimal (padrão BR e teclados numéricos).
+ * Não aplica máscara de milhar durante a digitação para evitar conflitos.
+ * Limita a 2 casas decimais.
  *
  * Exemplos:
- *   "1234"    → "1.234"
- *   "1234,"   → "1.234,"
- *   "1234,5"  → "1.234,5"
- *   "1234,56" → "1.234,56"
- *   "0,99"    → "0,99"
+ *   "16000"   → "16000"
+ *   "16000,"  → "16000,"
+ *   "160,50"  → "160,50"
+ *   "abc123"  → "123"
+ *   "10.5"    → "10,5"
  */
 export function maskCurrency(raw) {
-  // Converte ponto digitado em vírgula (teclado decimal usa ponto)
-  // Só converte se ainda não há vírgula no valor (para não conflitar com milhar)
-  let value = raw;
-  if (!value.includes(",") && value.includes(".")) {
-    // Substitui o último ponto por vírgula (separador decimal)
-    const lastDot = value.lastIndexOf(".");
-    value = value.slice(0, lastDot) + "," + value.slice(lastDot + 1);
-  }
+  // Converte ponto em vírgula (teclado decimal usa ponto)
+  let value = raw.replace(".", ",");
 
   // Remove tudo que não é dígito ou vírgula
   value = value.replace(/[^\d,]/g, "");
@@ -60,28 +54,18 @@ export function maskCurrency(raw) {
   // Se ficou vazio, retorna vazio
   if (!value) return "";
 
-  // Permite apenas uma vírgula
+  // Permite apenas uma vírgula (mantém a primeira)
   const parts = value.split(",");
   if (parts.length > 2) {
     value = parts[0] + "," + parts.slice(1).join("");
   }
 
-  // Separa inteiro e decimal
+  // Limita decimal a 2 dígitos
   const [intPart, decPart] = value.split(",");
 
-  // Remove zeros à esquerda (exceto "0" sozinho ou vazio antes da vírgula)
-  const cleanInt = intPart.replace(/^0+(?=\d)/, "") || (decPart !== undefined ? "0" : "");
-
-  // Se não tem parte inteira e não tem vírgula, retorna vazio
-  if (!cleanInt && decPart === undefined) return "";
-
-  // Aplica separador de milhar
-  const withThousands = cleanInt.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
-  // Limita decimal a 2 dígitos
   if (decPart !== undefined) {
-    return `${withThousands},${decPart.slice(0, 2)}`;
+    return `${intPart},${decPart.slice(0, 2)}`;
   }
 
-  return withThousands;
+  return intPart;
 }
