@@ -163,7 +163,7 @@ function toRow(transaction) {
     transaction.description,
     transaction.category,
     transaction.account,
-    String(transaction.amount),
+    Number(transaction.amount),
     "Confirmado",
     transaction.createdAt,
     new Date().toISOString(),
@@ -280,7 +280,7 @@ export async function importRows(token, spreadsheetId, rows, onProgress) {
 
     await request(
       token,
-      `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${SHEET_NAME}!A:L`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${SHEET_NAME}!A:L`)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       { method: "POST", body: JSON.stringify({ values: batch }) }
     );
 
