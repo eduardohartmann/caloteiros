@@ -147,6 +147,7 @@ export default function App() {
               <CouplePage
                 auth={auth}
                 couple={couple}
+                month={txns.month}
                 onConfirmReimbursement={(reimbursement) => {
                   txns.setDraft({ ...reimbursement, id: "", createdAt: "", split: false, lockType: true });
                   navigate(ROUTES.newTransaction);

@@ -1,14 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import CoupleSetup from "./CoupleSetup.jsx";
-import { brl, dateBR, monthNow } from "../utils/formatters.js";
+import { brl, dateBR } from "../utils/formatters.js";
 
 /**
  * CouplePage
  * Página do casal — mostra lançamentos compartilhados por mês.
  * Parceiro pode marcar "Paguei", criador pode confirmar recebimento.
  */
-export default function CouplePage({ auth, couple, onConfirmReimbursement, onPaymentDraft }) {
-  const [month, setMonth] = useState(monthNow());
+export default function CouplePage({ auth, couple, month, onConfirmReimbursement, onPaymentDraft }) {
 
   if (couple.coupleLoading) {
     return <div className="panel couple-loading"><p>Carregando planilha do casal…</p></div>;
@@ -33,7 +32,6 @@ export default function CouplePage({ auth, couple, onConfirmReimbursement, onPay
       userKey={couple.coupleUserKey}
       spreadsheetId={couple.coupleSpreadsheetId}
       month={month}
-      onMonthChange={setMonth}
       onMarkAsPaid={async (entry) => {
         const paymentDraft = await couple.handleMarkAsPaid(entry);
         if (paymentDraft && onPaymentDraft) {
@@ -57,7 +55,7 @@ export default function CouplePage({ auth, couple, onConfirmReimbursement, onPay
 
 function CoupleContent({
   entries, config, userKey, spreadsheetId,
-  month, onMonthChange,
+  month,
   onMarkAsPaid, onConfirmPayment, onDelete,
   loading, currentUser
 }) {
@@ -95,14 +93,6 @@ function CoupleContent({
           </div>
           <button type="button" className="ghost-button" onClick={() => navigator.clipboard?.writeText(spreadsheetId)}>Copiar</button>
         </div>
-      </div>
-
-      {/* Filtro de mês */}
-      <div className="couple-month-filter">
-        <label className="month-select">
-          <span className="sr-only">Mês</span>
-          <input type="month" value={month} onChange={(e) => onMonthChange(e.target.value)} />
-        </label>
       </div>
 
       {/* Cards de resumo */}
