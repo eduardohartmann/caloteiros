@@ -68,21 +68,21 @@ function CoupleContent({
   const pending = useMemo(
     () => entries
       .filter((e) => e.status === "pendente" && e.date.slice(0, 7) <= month)
-      .sort((a, b) => b.date.localeCompare(a.date)),
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
     [entries, month]
   );
 
   const paid = useMemo(
     () => entries
       .filter((e) => e.status === "pago" && e.date.slice(0, 7) <= month)
-      .sort((a, b) => b.date.localeCompare(a.date)),
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
     [entries, month]
   );
 
   const confirmed = useMemo(
     () => entries
       .filter((e) => e.status === "confirmado" && e.date.startsWith(month))
-      .sort((a, b) => b.date.localeCompare(a.date)),
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
     [entries, month]
   );
 
