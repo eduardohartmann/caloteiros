@@ -65,12 +65,19 @@ async function loadMonthTransactions(token, spreadsheetId, month) {
 /**
  * Extrai sugestões de autocomplete a partir de todas as transações.
  * Usa chave composta (descrição + categoria + conta) para manter variações.
+ * Exclui sugestões de contas inativas.
  */
-function buildSuggestions(allTransactions) {
+function buildSuggestions(allTransactions, accounts) {
+  const activeAccountIds = accounts
+    ? new Set(accounts.filter((a) => a.active).map((a) => a.id))
+    : null;
+
   const map = new Map();
   for (const t of allTransactions) {
     const desc = t.description.trim();
     if (!desc) continue;
+    // Ignora transações de contas inativas
+    if (activeAccountIds && t.account && !activeAccountIds.has(t.account)) continue;
     const key = `${desc.toLocaleLowerCase("pt-BR")}|${t.category}|${t.account}`;
     map.set(key, {
       description: desc,
@@ -295,7 +302,7 @@ export async function loadSpreadsheet(token, spreadsheetId, month) {
   const transactions = month
     ? allTransactions.filter((t) => t.date.startsWith(month))
     : allTransactions;
-  const suggestions = buildSuggestions(allTransactions);
+  const suggestions = buildSuggestions(allTransactions, accounts);
   return {
     spreadsheetId,
     transactionSheetId: meta.transactionSheetId,
@@ -417,10 +424,13 @@ export async function deleteSheetTransaction(token, spreadsheetId, transactionSh
   });
 
   // Lê tudo uma vez após a exclusão
-  const allTransactions = await loadAllTransactions(token, spreadsheetId);
+  const [allTransactions, accounts] = await Promise.all([
+    loadAllTransactions(token, spreadsheetId),
+    loadAccounts(makeRequestFn(token), spreadsheetId)
+  ]);
 
   const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
-  const suggestions = buildSuggestions(allTransactions);
+  const suggestions = buildSuggestions(allTransactions, accounts);
 
   return { spreadsheetId, transactions, allTransactions, suggestions };
 }
@@ -448,9 +458,12 @@ export async function deleteLinkedTransactions(token, spreadsheetId, transaction
     })
   });
 
-  const allTransactions = await loadAllTransactions(token, spreadsheetId);
+  const [allTransactions, accounts] = await Promise.all([
+    loadAllTransactions(token, spreadsheetId),
+    loadAccounts(makeRequestFn(token), spreadsheetId)
+  ]);
   const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
-  const suggestions = buildSuggestions(allTransactions);
+  const suggestions = buildSuggestions(allTransactions, accounts);
 
   return { spreadsheetId, transactions, allTransactions, suggestions };
 }
