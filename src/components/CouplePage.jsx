@@ -65,7 +65,7 @@ function CoupleContent({
 
   // Filtra por mês
   const monthEntries = useMemo(
-    () => entries.filter((e) => e.date.startsWith(month)).sort((a, b) => b.date.localeCompare(a.date)),
+    () => entries.filter((e) => e.date.startsWith(month)).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
     [entries, month]
   );
 
