@@ -13,6 +13,15 @@ import {
 
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
+function parseAmount(raw) {
+  if (raw == null || raw === "") return 0;
+  // Se contém vírgula, assume formato brasileiro (1.234,56 → 1234.56)
+  if (typeof raw === "string" && raw.includes(",")) {
+    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
+  }
+  return Number(raw) || 0;
+}
+
 function fromRow(row, index) {
   if (!row[0]) return null;
   return {
@@ -22,7 +31,7 @@ function fromRow(row, index) {
     description: row[3],
     category: row[4],
     account: row[5],
-    amount: Number(row[6]) || 0,
+    amount: parseAmount(row[6]),
     createdAt: row[8] || "",
     shared: row[10] === "true",
     linkedId: row[11] || "",
