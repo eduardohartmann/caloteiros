@@ -29,14 +29,23 @@ const COUPLE_HEADER = [
 
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
+function parseAmount(raw) {
+  if (raw == null || raw === "") return 0;
+  // Se contém vírgula, assume formato brasileiro (1.234,56 → 1234.56)
+  if (typeof raw === "string" && raw.includes(",")) {
+    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
+  }
+  return Number(raw) || 0;
+}
+
 function rowToEntry(row, index) {
   if (!row[0]) return null;
   return {
     id: row[0],
     date: row[1],
     description: row[2],
-    totalAmount: Number(row[3]) || 0,
-    amountDue: Number(row[4]) || 0,
+    totalAmount: parseAmount(row[3]),
+    amountDue: parseAmount(row[4]),
     status: row[5] || "pendente",
     createdBy: row[6] || "",
     createdAt: row[7] || "",
