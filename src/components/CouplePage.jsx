@@ -209,21 +209,24 @@ function CoupleContent({
   );
 }
 
-// ─── lista de entradas (layout em 2 sub-linhas) ──────────────────────────────
+// ─── lista de entradas (layout em 3 linhas) ──────────────────────────────────
 
 function EntryTable({ entries, actions }) {
   return (
     <div className="couple-entries">
       {entries.map((entry) => (
         <div key={entry.id} className="couple-entry-card">
-          <div className="couple-entry-row couple-entry-row--top">
+          <div className="couple-entry-line1">
             <span className="couple-entry-desc">{entry.description}</span>
-            {actions && <span className="couple-entry-actions">{actions(entry)}</span>}
           </div>
-          <div className="couple-entry-row couple-entry-row--bottom">
-            <span className="couple-entry-date">{dateBR(entry.date)}</span>
-            <span className="couple-entry-amount">{brl(entry.totalAmount)} <small>({brl(entry.amountDue)})</small></span>
-            <span className="couple-entry-person">{entry.createdBy}</span>
+          <div className="couple-entry-line2">
+            <span className="couple-entry-meta">{dateBR(entry.date)} · {entry.createdBy}</span>
+          </div>
+          <div className="couple-entry-line3">
+            <span className="couple-entry-values">
+              {brl(entry.totalAmount)} <span className="couple-entry-arrow">→</span> <span className="couple-entry-due">{brl(entry.amountDue)}</span>
+            </span>
+            {actions && <span className="couple-entry-actions">{actions(entry)}</span>}
           </div>
         </div>
       ))}
