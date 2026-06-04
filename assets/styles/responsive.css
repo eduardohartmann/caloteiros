@@ -179,7 +179,6 @@
   .cards {
     grid-template-columns: 1fr;
     gap: 12px;
-    margin-bottom: 16px;
   }
 
   /* saldo total ocupa linha inteira */
