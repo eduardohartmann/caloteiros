@@ -9,6 +9,7 @@ import Spinner from "./components/Spinner.jsx";
 import Toast from "./components/Toast.jsx";
 import TransactionForm from "./components/TransactionForm.jsx";
 import { navigate, ROUTES } from "./routes.js";
+import { today } from "./utils/formatters.js";
 import useRouter from "./hooks/useRouter.js";
 import useToast from "./hooks/useToast.js";
 import useAuth from "./hooks/useAuth.js";
@@ -81,7 +82,12 @@ export default function App() {
           connected={true}
           route={route}
           spreadsheetId={auth.spreadsheetId}
-          onNavigate={navigate}
+          onNavigate={(path) => {
+            if (path === ROUTES.newTransaction) {
+              txns.setDraft({ id: "", type: "expense", description: "", amount: "", category: "", date: today(), account: "", createdAt: "", split: false });
+            }
+            navigate(path);
+          }}
         />
         <section className="workspace" id="dashboard-content" aria-label="Painel financeiro">
           <DashboardHeader
