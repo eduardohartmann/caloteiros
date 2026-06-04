@@ -21,9 +21,6 @@ import { ensureAppFolder, SPREADSHEET_MIME } from "./driveUtils.js";
 import { request, updateValues } from "./sheetsApi.js";
 import { parseAmount } from "../utils/formatters.js";
 
-// Re-exporta parseAmount para manter compatibilidade com imports existentes
-export { parseAmount } from "../utils/formatters.js";
-
 /** @typedef {import("../types.js").CoupleEntry} CoupleEntry */
 
 const COUPLE_HEADER = [

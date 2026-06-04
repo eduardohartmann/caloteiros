@@ -12,9 +12,6 @@ import {
   importCategories, importAccounts
 } from "./settingsSheets.js";
 
-// Re-exporta parseAmount para manter compatibilidade com imports existentes
-export { parseAmount } from "../utils/formatters.js";
-
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
 /** @typedef {import("../types.js").Transaction} Transaction */

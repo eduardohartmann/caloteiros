@@ -5,7 +5,8 @@
  *   id | data | descricao | valorTotal | valorDevido | status | cadastradoPor | criadoEm | transacaoOrigem | transacaoPagamento
  */
 import { describe, it, expect } from "vitest";
-import { parseAmount, rowToEntry, entryToRow } from "../../src/services/coupleSheets.js";
+import { rowToEntry, entryToRow } from "../../src/services/coupleSheets.js";
+import { parseAmount } from "../../src/utils/formatters.js";
 
 // ─── parseAmount (couple) ─────────────────────────────────────────────────────
 
