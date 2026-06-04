@@ -218,22 +218,12 @@ function EntryTable({ entries, actions }) {
         <div key={entry.id} className="couple-entry-card">
           <div className="couple-entry-row couple-entry-row--top">
             <span className="couple-entry-desc">{entry.description}</span>
-            <span className="couple-entry-date">{dateBR(entry.date)}</span>
             {actions && <span className="couple-entry-actions">{actions(entry)}</span>}
           </div>
           <div className="couple-entry-row couple-entry-row--bottom">
-            <span className="couple-entry-detail">
-              <small>Total</small>
-              <strong>{brl(entry.totalAmount)}</strong>
-            </span>
-            <span className="couple-entry-detail couple-entry-detail--due">
-              <small>Parte devida</small>
-              <strong className="value expense">- {brl(entry.amountDue)}</strong>
-            </span>
-            <span className="couple-entry-detail">
-              <small>Por</small>
-              <strong>{entry.createdBy}</strong>
-            </span>
+            <span className="couple-entry-date">{dateBR(entry.date)}</span>
+            <span className="couple-entry-amount">{brl(entry.totalAmount)} <small>({brl(entry.amountDue)})</small></span>
+            <span className="couple-entry-person">{entry.createdBy}</span>
           </div>
         </div>
       ))}
