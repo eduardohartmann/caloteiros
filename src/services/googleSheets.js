@@ -76,7 +76,7 @@ async function loadMonthTransactions(token, spreadsheetId, month) {
  * Usa chave composta (descrição + categoria + conta) para manter variações.
  * Exclui sugestões de contas inativas.
  */
-function buildSuggestions(allTransactions, accounts) {
+export function buildSuggestions(allTransactions, accounts) {
   const activeAccountIds = accounts
     ? new Set(accounts.filter((a) => a.active).map((a) => a.id))
     : null;

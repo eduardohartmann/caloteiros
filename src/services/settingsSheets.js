@@ -21,7 +21,7 @@ export const ACCOUNTS_HEADER   = ["id", "nome", "ativo", "criadoEm", "atualizado
 
 // ─── conversão ────────────────────────────────────────────────────────────────
 
-function rowToCategory(row, index) {
+export function rowToCategory(row, index) {
   if (!row[0]) return null;
   return {
     id:        row[0],
@@ -35,7 +35,7 @@ function rowToCategory(row, index) {
   };
 }
 
-function categoryToRow(cat) {
+export function categoryToRow(cat) {
   return [
     cat.id,
     cat.parentId || "",
@@ -48,7 +48,7 @@ function categoryToRow(cat) {
   ];
 }
 
-function rowToAccount(row, index) {
+export function rowToAccount(row, index) {
   if (!row[0]) return null;
   return {
     id:        row[0],
@@ -59,7 +59,7 @@ function rowToAccount(row, index) {
   };
 }
 
-function accountToRow(acc) {
+export function accountToRow(acc) {
   return [
     acc.id,
     acc.name,
