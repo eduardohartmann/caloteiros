@@ -198,7 +198,7 @@ export default function TransactionForm({
           </label>
           <label>
             Valor
-            <input required inputMode="decimal" placeholder="0,00" value={transaction.amount} onChange={(e) => changeField("amount", maskCurrency(e.target.value))} />
+            <input required inputMode="numeric" placeholder="0,00" value={transaction.amount} onChange={(e) => changeField("amount", maskCurrency(e.target.value))} />
           </label>
         </div>
 

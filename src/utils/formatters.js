@@ -32,47 +32,36 @@ export function amountFromInput(value) {
 }
 
 /**
- * Aplica máscara monetária brasileira ao valor digitado.
- * - Separador de milhar: .
- * - Separador decimal: ,
- * - Máximo 2 casas decimais
+ * Aplica máscara monetária estilo Nubank.
+ * O usuário digita apenas números e os 2 últimos dígitos são sempre centavos.
+ * A vírgula decimal é inserida automaticamente.
  *
  * Exemplos:
- *   "1234"    → "1.234"
- *   "1234,"   → "1.234,"
- *   "1234,5"  → "1.234,5"
- *   "1234,56" → "1.234,56"
- *   "0,99"    → "0,99"
+ *   "1"       → "0,01"
+ *   "15"      → "0,15"
+ *   "150"     → "1,50"
+ *   "1500"    → "15,00"
+ *   "123456"  → "1.234,56"
  */
 export function maskCurrency(raw) {
-  // Remove tudo que não é dígito ou vírgula
-  let value = raw.replace(/[^\d,]/g, "");
+  // Remove tudo que não é dígito
+  const digits = raw.replace(/\D/g, "");
 
   // Se ficou vazio, retorna vazio
-  if (!value) return "";
+  if (!digits) return "";
 
-  // Permite apenas uma vírgula
-  const parts = value.split(",");
-  if (parts.length > 2) {
-    value = parts[0] + "," + parts.slice(1).join("");
-  }
+  // Converte para centavos (inteiro)
+  const cents = parseInt(digits, 10);
+  if (cents === 0) return "0,00";
+
+  // Formata com 2 casas decimais
+  const formatted = (cents / 100).toFixed(2);
 
   // Separa inteiro e decimal
-  const [intPart, decPart] = value.split(",");
-
-  // Remove zeros à esquerda (exceto "0" sozinho ou vazio antes da vírgula)
-  const cleanInt = intPart.replace(/^0+(?=\d)/, "") || (decPart !== undefined ? "0" : "");
-
-  // Se não tem parte inteira e não tem vírgula, retorna vazio
-  if (!cleanInt && decPart === undefined) return "";
+  const [intPart, decPart] = formatted.split(".");
 
   // Aplica separador de milhar
-  const withThousands = cleanInt.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-  // Limita decimal a 2 dígitos
-  if (decPart !== undefined) {
-    return `${withThousands},${decPart.slice(0, 2)}`;
-  }
-
-  return withThousands;
+  return `${withThousands},${decPart}`;
 }
