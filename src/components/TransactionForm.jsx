@@ -15,7 +15,6 @@ export default function TransactionForm({
   transaction,
   editing,
   onChange,
-  onCancel,
   onSubmit,
   onRemove,
   onTransfer,
@@ -156,13 +155,9 @@ export default function TransactionForm({
               )}
             </>
           )}
-          {editing && (
-            <button className="link-button type-toggle-cancel" type="button" onClick={onCancel}>Cancelar</button>
-          )}
         </div>
 
-        <div className="form-row">
-          <label className="autocomplete-wrapper">
+        <label className="autocomplete-wrapper">
             Descrição
             <input
               ref={inputRef}
@@ -192,37 +187,37 @@ export default function TransactionForm({
               </ul>
             )}
           </label>
+
+        <div className="form-row">
           <label>
             Valor
             <input required inputMode="numeric" placeholder="0,00" value={transaction.amount} onChange={(e) => changeField("amount", maskCurrency(e.target.value))} />
           </label>
+          <label>
+            Data
+            <input type="date" required value={transaction.date} onChange={(e) => changeField("date", e.target.value)} />
+          </label>
         </div>
 
         {isTransfer ? (
-          <>
-            <div className="form-row">
-              <label>
-                Conta origem
-                <AccountSelect
-                  options={accountOptions}
-                  value={effectiveAccount}
-                  onChange={(id) => changeField("account", id)}
-                />
-              </label>
-              <label>
-                Conta destino
-                <AccountSelect
-                  options={accountOptions.filter((a) => a.id !== effectiveAccount)}
-                  value={destinationAccount}
-                  onChange={setDestinationAccount}
-                />
-              </label>
-            </div>
+          <div className="form-row">
             <label>
-              Data
-              <input type="date" required value={transaction.date} onChange={(e) => changeField("date", e.target.value)} />
+              Conta origem
+              <AccountSelect
+                options={accountOptions}
+                value={effectiveAccount}
+                onChange={(id) => changeField("account", id)}
+              />
             </label>
-          </>
+            <label>
+              Conta destino
+              <AccountSelect
+                options={accountOptions.filter((a) => a.id !== effectiveAccount)}
+                value={destinationAccount}
+                onChange={setDestinationAccount}
+              />
+            </label>
+          </div>
         ) : (
           <>
             <div className="form-row">
@@ -235,19 +230,14 @@ export default function TransactionForm({
                 />
               </label>
               <label>
-                Data
-                <input type="date" required value={transaction.date} onChange={(e) => changeField("date", e.target.value)} />
+                Conta
+                <AccountSelect
+                  options={accountOptions}
+                  value={effectiveAccount}
+                  onChange={(id) => changeField("account", id)}
+                />
               </label>
             </div>
-
-            <label>
-              Conta
-              <AccountSelect
-                options={accountOptions}
-                value={effectiveAccount}
-                onChange={(id) => changeField("account", id)}
-              />
-            </label>
 
             {!editing && transaction.type === "expense" && (
               <label className="split-checkbox">
@@ -262,22 +252,24 @@ export default function TransactionForm({
           </>
         )}
 
-        <button className="primary-button" type="submit" disabled={saving}>
-          {saving
-            ? "Salvando…"
-            : isTransfer ? "Transferir" : editing ? "Atualizar lançamento" : "Salvar lançamento"
-          }
-        </button>
-
-        {editing && onRemove && (
-          <button
-            className="danger-button"
-            type="button"
-            onClick={() => onRemove(transaction)}
-          >
-            Excluir lançamento
+        <div className="form-actions">
+          <button className="primary-button" type="submit" disabled={saving}>
+            {saving
+              ? "Salvando…"
+              : isTransfer ? "Transferir" : editing ? "Atualizar" : "Salvar lançamento"
+            }
           </button>
-        )}
+
+          {editing && onRemove && (
+            <button
+              className="danger-button"
+              type="button"
+              onClick={() => onRemove(transaction)}
+            >
+              Excluir
+            </button>
+          )}
+        </div>
       </form>
     </section>
   );

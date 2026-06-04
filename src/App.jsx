@@ -140,7 +140,6 @@ export default function App() {
                 transaction={txns.draft}
                 editing={Boolean(txns.draft.id)}
                 onChange={txns.setDraft}
-                onCancel={txns.resetForm}
                 onSubmit={txns.saveTransaction}
                 onRemove={txns.removeTransaction}
                 onTransfer={txns.transferBetweenAccounts}
