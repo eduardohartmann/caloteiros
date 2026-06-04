@@ -21,7 +21,9 @@ export default function TransactionForm({
   categories: dynamicCategories,
   accounts: dynamicAccounts,
   suggestions = [],
-  saving = false
+  saving = false,
+  continueMode = false,
+  onContinueModeChange
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [destinationAccount, setDestinationAccount] = useState(
@@ -220,24 +222,23 @@ export default function TransactionForm({
           </div>
         ) : (
           <>
-            <div className="form-row">
-              <label>
-                Categoria
-                <CategorySelect
-                  options={categoryOptions}
-                  value={effectiveCategory}
-                  onChange={(id) => changeField("category", id)}
-                />
-              </label>
-              <label>
-                Conta
-                <AccountSelect
-                  options={accountOptions}
-                  value={effectiveAccount}
-                  onChange={(id) => changeField("account", id)}
-                />
-              </label>
-            </div>
+            <label>
+              Categoria
+              <CategorySelect
+                options={categoryOptions}
+                value={effectiveCategory}
+                onChange={(id) => changeField("category", id)}
+              />
+            </label>
+
+            <label>
+              Conta
+              <AccountSelect
+                options={accountOptions}
+                value={effectiveAccount}
+                onChange={(id) => changeField("account", id)}
+              />
+            </label>
 
             {!editing && transaction.type === "expense" && (
               <label className="split-checkbox">
@@ -246,7 +247,18 @@ export default function TransactionForm({
                   checked={transaction.split || false}
                   onChange={(e) => changeField("split", e.target.checked)}
                 />
-                <span>Dividir com parceiro(a) (50/50)</span>
+                <span>Dividir</span>
+              </label>
+            )}
+
+            {!editing && (
+              <label className="split-checkbox">
+                <input
+                  type="checkbox"
+                  checked={continueMode}
+                  onChange={(e) => onContinueModeChange(e.target.checked)}
+                />
+                <span>Inserir em sequência</span>
               </label>
             )}
           </>

@@ -147,6 +147,8 @@ export default function App() {
                 accounts={settings.accounts}
                 suggestions={txns.suggestions}
                 saving={txns.saving}
+                continueMode={txns.continueMode}
+                onContinueModeChange={txns.setContinueMode}
               />
             </div>
           )}
