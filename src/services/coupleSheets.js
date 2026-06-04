@@ -19,6 +19,12 @@
 import { COUPLE_SHEET_NAME, SETTINGS_SHEET, STORAGE } from "../constants.js";
 import { ensureAppFolder, SPREADSHEET_MIME } from "./driveUtils.js";
 import { request, updateValues } from "./sheetsApi.js";
+import { parseAmount } from "../utils/formatters.js";
+
+// Re-exporta parseAmount para manter compatibilidade com imports existentes
+export { parseAmount } from "../utils/formatters.js";
+
+/** @typedef {import("../types.js").CoupleEntry} CoupleEntry */
 
 const COUPLE_HEADER = [
   "id", "data", "descricao",
@@ -29,15 +35,12 @@ const COUPLE_HEADER = [
 
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
-export function parseAmount(raw) {
-  if (raw == null || raw === "") return 0;
-  // Se contém vírgula, assume formato brasileiro (1.234,56 → 1234.56)
-  if (typeof raw === "string" && raw.includes(",")) {
-    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
-  }
-  return Number(raw) || 0;
-}
-
+/**
+ * Converte uma linha da aba Divisao em objeto CoupleEntry.
+ * @param {string[]} row
+ * @param {number} index
+ * @returns {CoupleEntry|null}
+ */
 export function rowToEntry(row, index) {
   if (!row[0]) return null;
   return {
@@ -55,6 +58,11 @@ export function rowToEntry(row, index) {
   };
 }
 
+/**
+ * Converte um objeto CoupleEntry em array de valores para a planilha.
+ * @param {CoupleEntry} entry
+ * @returns {any[]}
+ */
 export function entryToRow(entry) {
   return [
     entry.id,

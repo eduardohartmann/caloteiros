@@ -1,7 +1,8 @@
 import { SETTINGS_SHEET, SHEET_NAME, STORAGE, CATEGORIES_SHEET, ACCOUNTS_SHEET } from "../constants.js";
 import { ensureAppFolder, findAppFolder, findFile, SPREADSHEET_MIME } from "./driveUtils.js";
-import { request, updateValues, makeRequestFn, makeUpdateFn } from "./sheetsApi.js";
+import { request, updateValues, makeRequestFn, makeUpdateFn, createSheetsClient } from "./sheetsApi.js";
 import { migrateIfNeeded } from "./migrations.js";
+import { parseAmount } from "../utils/formatters.js";
 import {
   CATEGORIES_HEADER, ACCOUNTS_HEADER,
   loadCategories, loadAccounts,
@@ -11,16 +12,21 @@ import {
   importCategories, importAccounts
 } from "./settingsSheets.js";
 
+// Re-exporta parseAmount para manter compatibilidade com imports existentes
+export { parseAmount } from "../utils/formatters.js";
+
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
-export function parseAmount(raw) {
-  if (raw == null || raw === "") return 0;
-  // Se contém vírgula, assume formato brasileiro (1.234,56 → 1234.56)
-  if (typeof raw === "string" && raw.includes(",")) {
-    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
-  }
-  return Number(raw) || 0;
-}
+/** @typedef {import("../types.js").Transaction} Transaction */
+/** @typedef {import("../types.js").SpreadsheetData} SpreadsheetData */
+/** @typedef {import("../types.js").Suggestion} Suggestion */
+
+/**
+ * Converte uma linha da planilha em um objeto Transaction.
+ * @param {string[]} row - Array de valores da linha.
+ * @param {number} index - Índice da linha (0-based, excluindo cabeçalho).
+ * @returns {Transaction|null}
+ */
 
 export function fromRow(row, index) {
   if (!row[0]) return null;
@@ -39,6 +45,11 @@ export function fromRow(row, index) {
   };
 }
 
+/**
+ * Converte um objeto Transaction em array de valores para gravar na planilha.
+ * @param {Transaction & { split?: boolean }} transaction
+ * @returns {any[]}
+ */
 export function toRow(transaction) {
   return [
     transaction.id,
@@ -102,8 +113,14 @@ export function buildSuggestions(allTransactions, accounts) {
   return Array.from(map.values());
 }
 
-async function loadSheetMeta(token, spreadsheetId) {
-  let metadata = await request(token, `spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+/**
+ * Garante que todas as abas obrigatórias existem na planilha.
+ * Cria abas faltantes, grava cabeçalhos e faz seed de dados padrão se necessário.
+ * Retorna os metadados da planilha (sheetId de transações e mapa de IDs).
+ */
+async function ensureSheetStructure(token, spreadsheetId) {
+  const client = createSheetsClient(token);
+  let metadata = await client.request(`spreadsheets/${spreadsheetId}?fields=sheets.properties`);
   let existingSheets = metadata.sheets.map((s) => s.properties.title);
 
   // Define todas as abas necessárias com seus cabeçalhos
@@ -117,7 +134,7 @@ async function loadSheetMeta(token, spreadsheetId) {
   // Cria abas que não existem
   const missingSheets = requiredSheets.filter((s) => !existingSheets.includes(s.title));
   if (missingSheets.length > 0) {
-    await request(token, `spreadsheets/${spreadsheetId}:batchUpdate`, {
+    await client.request(`spreadsheets/${spreadsheetId}:batchUpdate`, {
       method: "POST",
       body: JSON.stringify({
         requests: missingSheets.map((s) => ({ addSheet: { properties: { title: s.title } } }))
@@ -127,16 +144,16 @@ async function loadSheetMeta(token, spreadsheetId) {
     // Grava cabeçalhos das abas criadas
     for (const s of missingSheets) {
       const range = `${s.title}!A1:${String.fromCharCode(64 + s.header.length)}1`;
-      await updateValues(token, spreadsheetId, range, [s.header]);
+      await client.updateValues(spreadsheetId, range, [s.header]);
     }
 
     // Se Categorias ou Contas foram criadas, faz seed dos dados padrão
     if (missingSheets.some((s) => s.title === CATEGORIES_SHEET || s.title === ACCOUNTS_SHEET)) {
-      await seedCategoriesAndAccounts(makeUpdateFn(token), spreadsheetId);
+      await seedCategoriesAndAccounts(client.updateValues, spreadsheetId);
     }
 
     // Recarrega metadata com as novas abas
-    metadata = await request(token, `spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+    metadata = await client.request(`spreadsheets/${spreadsheetId}?fields=sheets.properties`);
     existingSheets = metadata.sheets.map((s) => s.properties.title);
   }
 
@@ -150,6 +167,7 @@ async function loadSheetMeta(token, spreadsheetId) {
 // ─── criação da planilha ──────────────────────────────────────────────────────
 
 async function createSpreadsheet(token) {
+  const client = createSheetsClient(token);
   const folderId = await ensureAppFolder(token);
 
   let spreadsheetId;
@@ -223,10 +241,10 @@ async function createSpreadsheet(token) {
   ]);
 
   // Seed de categorias e contas
-  await seedCategoriesAndAccounts(makeUpdateFn(token), spreadsheetId);
+  await seedCategoriesAndAccounts(client.updateValues, spreadsheetId);
 
   // Formatar cabeçalho
-  await request(token, `spreadsheets/${spreadsheetId}:batchUpdate`, {
+  await client.request(`spreadsheets/${spreadsheetId}:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({
       requests: [
@@ -238,8 +256,8 @@ async function createSpreadsheet(token) {
   });
 
   const [categories, accounts] = await Promise.all([
-    loadCategories(makeRequestFn(token), spreadsheetId),
-    loadAccounts(makeRequestFn(token), spreadsheetId)
+    loadCategories(client.request, spreadsheetId),
+    loadAccounts(client.request, spreadsheetId)
   ]);
 
   return { spreadsheetId, transactionSheetId, sheetIdMap, transactions: [], categories, accounts };
@@ -284,7 +302,7 @@ export async function ensureSpreadsheet(token, currentSpreadsheetId, month) {
     // Verifica se a planilha não foi excluída/lixeira
     const active = await isFileActive(token, currentSpreadsheetId);
     if (active) {
-      // Se a planilha existe e está ativa, carrega diretamente (loadSheetMeta cria abas faltantes)
+      // Se a planilha existe e está ativa, carrega diretamente (ensureSheetStructure cria abas faltantes)
       return await loadSpreadsheet(token, currentSpreadsheetId, month);
     }
     // planilha na lixeira ou excluída — limpa e continua
@@ -302,14 +320,16 @@ export async function ensureSpreadsheet(token, currentSpreadsheetId, month) {
 }
 
 export async function loadSpreadsheet(token, spreadsheetId, month) {
+  const client = createSheetsClient(token);
+
   // Aplica migrações pendentes antes de carregar
   await migrateIfNeeded(token, spreadsheetId);
 
   const [meta, allTransactions, categories, accounts, settings] = await Promise.all([
-    loadSheetMeta(token, spreadsheetId),
+    ensureSheetStructure(token, spreadsheetId),
     loadAllTransactions(token, spreadsheetId),
-    loadCategories(makeRequestFn(token), spreadsheetId),
-    loadAccounts(makeRequestFn(token), spreadsheetId),
+    loadCategories(client.request, spreadsheetId),
+    loadAccounts(client.request, spreadsheetId),
     loadSettings(token, spreadsheetId)
   ]);
   const transactions = month
@@ -328,19 +348,18 @@ export async function loadSpreadsheet(token, spreadsheetId, month) {
 // ─── settings API ─────────────────────────────────────────────────────────────
 
 export function makeSettingsApi(token, spreadsheetId, sheetIdMap = {}) {
-  const reqFn = makeRequestFn(token);
-  const updFn = makeUpdateFn(token);
+  const client = createSheetsClient(token);
   return {
-    loadCategories:   () => loadCategories(reqFn, spreadsheetId),
-    loadAccounts:     () => loadAccounts(reqFn, spreadsheetId),
-    saveCategory:     (cat, existing) => saveCategory(reqFn, updFn, spreadsheetId, cat, existing),
-    toggleCategory:   (cat) => toggleCategory(updFn, spreadsheetId, cat),
-    deleteCategory:   (cat) => deleteCategory(reqFn, spreadsheetId, cat, sheetIdMap),
-    saveAccount:      (acc, existing) => saveAccount(reqFn, updFn, spreadsheetId, acc, existing),
-    toggleAccount:    (acc) => toggleAccount(updFn, spreadsheetId, acc),
-    deleteAccount:    (acc) => deleteAccount(reqFn, spreadsheetId, acc, sheetIdMap),
-    importCategories: (data) => importCategories(reqFn, updFn, spreadsheetId, data),
-    importAccounts:   (data) => importAccounts(reqFn, updFn, spreadsheetId, data)
+    loadCategories:   () => loadCategories(client.request, spreadsheetId),
+    loadAccounts:     () => loadAccounts(client.request, spreadsheetId),
+    saveCategory:     (cat, existing) => saveCategory(client.request, client.updateValues, spreadsheetId, cat, existing),
+    toggleCategory:   (cat) => toggleCategory(client.updateValues, spreadsheetId, cat),
+    deleteCategory:   (cat) => deleteCategory(client.request, spreadsheetId, cat, sheetIdMap),
+    saveAccount:      (acc, existing) => saveAccount(client.request, client.updateValues, spreadsheetId, acc, existing),
+    toggleAccount:    (acc) => toggleAccount(client.updateValues, spreadsheetId, acc),
+    deleteAccount:    (acc) => deleteAccount(client.request, spreadsheetId, acc, sheetIdMap),
+    importCategories: (data) => importCategories(client.request, client.updateValues, spreadsheetId, data),
+    importAccounts:   (data) => importAccounts(client.request, client.updateValues, spreadsheetId, data)
   };
 }
 
@@ -425,7 +444,9 @@ export async function saveSheetTransaction(token, spreadsheetId, transaction, cu
 // ─── excluir transação ────────────────────────────────────────────────────────
 
 export async function deleteSheetTransaction(token, spreadsheetId, transactionSheetId, transaction, currentMonth) {
-  await request(token, `spreadsheets/${spreadsheetId}:batchUpdate`, {
+  const client = createSheetsClient(token);
+
+  await client.request(`spreadsheets/${spreadsheetId}:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({
       requests: [{
@@ -439,7 +460,7 @@ export async function deleteSheetTransaction(token, spreadsheetId, transactionSh
   // Lê tudo uma vez após a exclusão
   const [allTransactions, accounts] = await Promise.all([
     loadAllTransactions(token, spreadsheetId),
-    loadAccounts(makeRequestFn(token), spreadsheetId)
+    loadAccounts(client.request, spreadsheetId)
   ]);
 
   const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
@@ -453,9 +474,10 @@ export async function deleteSheetTransaction(token, spreadsheetId, transactionSh
  * Ordena por rowNumber decrescente para não invalidar índices.
  */
 export async function deleteLinkedTransactions(token, spreadsheetId, transactionSheetId, txnA, txnB, currentMonth) {
+  const client = createSheetsClient(token);
   const sorted = [txnA, txnB].sort((a, b) => b.rowNumber - a.rowNumber);
 
-  await request(token, `spreadsheets/${spreadsheetId}:batchUpdate`, {
+  await client.request(`spreadsheets/${spreadsheetId}:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({
       requests: sorted.map((t) => ({
@@ -473,7 +495,7 @@ export async function deleteLinkedTransactions(token, spreadsheetId, transaction
 
   const [allTransactions, accounts] = await Promise.all([
     loadAllTransactions(token, spreadsheetId),
-    loadAccounts(makeRequestFn(token), spreadsheetId)
+    loadAccounts(client.request, spreadsheetId)
   ]);
   const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
   const suggestions = buildSuggestions(allTransactions, accounts);

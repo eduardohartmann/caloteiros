@@ -85,6 +85,31 @@ export function makeUpdateFn(token) {
 }
 
 /**
+ * Cria um cliente Sheets com token já embutido.
+ * Elimina a necessidade de passar `token` em toda chamada.
+ *
+ * @param {string} token - OAuth2 access token.
+ * @returns {SheetsClient}
+ *
+ * @example
+ *   const client = createSheetsClient(token);
+ *   const data = await client.request("spreadsheets/ID/values/A1:B2");
+ *   await client.updateValues(spreadsheetId, "Sheet!A1:B2", [["a","b"]]);
+ */
+export function createSheetsClient(token) {
+  return {
+    /** @type {(path: string, options?: RequestInit) => Promise<any>} */
+    request: (path, options = {}) => request(token, path, options),
+
+    /** @type {(spreadsheetId: string, range: string, values: any[][]) => Promise<any>} */
+    updateValues: (spreadsheetId, range, values) => updateValues(token, spreadsheetId, range, values),
+
+    /** O token original, caso precise para chamadas ao Drive API. */
+    token
+  };
+}
+
+/**
  * Erro específico de token expirado — permite tratamento diferenciado na UI.
  */
 export class TokenExpiredError extends Error {

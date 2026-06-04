@@ -11,6 +11,9 @@
 
 import { ACCOUNTS_SHEET, CATEGORIES_SHEET, DEFAULT_ACCOUNTS, DEFAULT_CATEGORIES, TRANSFER_CATEGORY_ID } from "../constants.js";
 
+/** @typedef {import("../types.js").Category} Category */
+/** @typedef {import("../types.js").Account} Account */
+
 export const CATEGORIES_HEADER = ["id", "parentId", "nome", "icone", "cor", "ativo", "criadoEm", "atualizadoEm"];
 export const ACCOUNTS_HEADER   = ["id", "nome", "ativo", "criadoEm", "atualizadoEm"];
 
@@ -21,6 +24,12 @@ export const ACCOUNTS_HEADER   = ["id", "nome", "ativo", "criadoEm", "atualizado
 
 // ─── conversão ────────────────────────────────────────────────────────────────
 
+/**
+ * Converte uma linha da aba Categorias em objeto Category.
+ * @param {string[]} row
+ * @param {number} index
+ * @returns {Category|null}
+ */
 export function rowToCategory(row, index) {
   if (!row[0]) return null;
   return {
@@ -35,6 +44,11 @@ export function rowToCategory(row, index) {
   };
 }
 
+/**
+ * Converte um objeto Category em array de valores para a planilha.
+ * @param {Category} cat
+ * @returns {any[]}
+ */
 export function categoryToRow(cat) {
   return [
     cat.id,
@@ -48,6 +62,12 @@ export function categoryToRow(cat) {
   ];
 }
 
+/**
+ * Converte uma linha da aba Contas em objeto Account.
+ * @param {string[]} row
+ * @param {number} index
+ * @returns {Account|null}
+ */
 export function rowToAccount(row, index) {
   if (!row[0]) return null;
   return {
@@ -59,6 +79,11 @@ export function rowToAccount(row, index) {
   };
 }
 
+/**
+ * Converte um objeto Account em array de valores para a planilha.
+ * @param {Account} acc
+ * @returns {any[]}
+ */
 export function accountToRow(acc) {
   return [
     acc.id,
