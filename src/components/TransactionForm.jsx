@@ -220,24 +220,23 @@ export default function TransactionForm({
           </div>
         ) : (
           <>
-            <div className="form-row">
-              <label>
-                Categoria
-                <CategorySelect
-                  options={categoryOptions}
-                  value={effectiveCategory}
-                  onChange={(id) => changeField("category", id)}
-                />
-              </label>
-              <label>
-                Conta
-                <AccountSelect
-                  options={accountOptions}
-                  value={effectiveAccount}
-                  onChange={(id) => changeField("account", id)}
-                />
-              </label>
-            </div>
+            <label>
+              Categoria
+              <CategorySelect
+                options={categoryOptions}
+                value={effectiveCategory}
+                onChange={(id) => changeField("category", id)}
+              />
+            </label>
+
+            <label>
+              Conta
+              <AccountSelect
+                options={accountOptions}
+                value={effectiveAccount}
+                onChange={(id) => changeField("account", id)}
+              />
+            </label>
 
             {!editing && transaction.type === "expense" && (
               <label className="split-checkbox">
