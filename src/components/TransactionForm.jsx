@@ -132,12 +132,6 @@ export default function TransactionForm({
 
   return (
     <section className="panel form-panel" id="new-transaction" aria-labelledby="form-title">
-      {editing && (
-        <div className="panel-header">
-          <div />
-          <button className="link-button" type="button" onClick={onCancel}>Cancelar</button>
-        </div>
-      )}
       <form onSubmit={handleSubmit}>
         <div className="type-toggle" role="group" aria-label="Tipo">
           {isTransfer && editing ? (
@@ -161,6 +155,9 @@ export default function TransactionForm({
                 </label>
               )}
             </>
+          )}
+          {editing && (
+            <button className="link-button type-toggle-cancel" type="button" onClick={onCancel}>Cancelar</button>
           )}
         </div>
 
