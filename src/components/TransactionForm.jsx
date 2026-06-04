@@ -135,7 +135,6 @@ export default function TransactionForm({
       <div className="panel-header">
         <div>
           <h3 id="form-title">{editing ? "Editar lançamento" : "Novo lançamento"}</h3>
-          <p>Registre em poucos segundos</p>
         </div>
         {editing && <button className="link-button" type="button" onClick={onCancel}>Cancelar</button>}
       </div>
