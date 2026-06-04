@@ -6,12 +6,11 @@ import { describe, it, expect } from "vitest";
 import { analyzeImportData, buildCategoryMap, buildAccountMap, buildRows } from "../../src/services/importTransactions.js";
 
 const CATEGORIES = [
-  { id: "cat-transferencia", parentId: "", name: "Transferência", icon: "🔄", color: "#6C7A89", active: true, children: [] },
-  { id: "cat-alimentacao", parentId: "", name: "Alimentação", icon: "🍔", color: "#E8A838", active: true, children: [
-    { id: "cat-mercado", parentId: "cat-alimentacao", name: "Supermercado", icon: "🛒", color: "#E8A838", active: true, children: [] }
-  ]},
-  { id: "cat-transporte", parentId: "", name: "Transporte", icon: "🚗", color: "#7B68EE", active: true, children: [] },
-  { id: "cat-salario", parentId: "", name: "Salário", icon: "💰", color: "#2ECC71", active: true, children: [] }
+  { id: "cat-transferencia", parentId: "", name: "Transferência", icon: "🔄", color: "#6C7A89", active: true },
+  { id: "cat-alimentacao", parentId: "", name: "Alimentação", icon: "🍔", color: "#E8A838", active: true },
+  { id: "cat-mercado", parentId: "cat-alimentacao", name: "Supermercado", icon: "🛒", color: "#E8A838", active: true },
+  { id: "cat-transporte", parentId: "", name: "Transporte", icon: "🚗", color: "#7B68EE", active: true },
+  { id: "cat-salario", parentId: "", name: "Salário", icon: "💰", color: "#2ECC71", active: true }
 ];
 
 const ACCOUNTS = [
