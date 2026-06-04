@@ -227,6 +227,68 @@
   font-size: .88rem;
 }
 
+/* ── entry cards (3 linhas) ──────────────────────────────────────────────────── */
+.couple-entries {
+  display: grid;
+  gap: 0;
+}
+
+.couple-entry-card {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.couple-entry-card:last-child {
+  border-bottom: none;
+}
+
+.couple-entry-line1 {
+  margin-bottom: 4px;
+}
+
+.couple-entry-desc {
+  font-weight: 600;
+  font-size: .88rem;
+  color: var(--ink);
+}
+
+.couple-entry-line2 {
+  margin-bottom: 6px;
+}
+
+.couple-entry-meta {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+.couple-entry-line3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.couple-entry-values {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.couple-entry-arrow {
+  color: var(--muted);
+  margin: 0 2px;
+}
+
+.couple-entry-due {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.couple-entry-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ── responsivo ──────────────────────────────────────────────────────────────── */
 @media (max-width: 760px) {
   .couple-summary { grid-template-columns: 1fr; }
