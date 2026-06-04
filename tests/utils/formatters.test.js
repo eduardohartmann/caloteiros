@@ -37,8 +37,8 @@ describe("amountFromInput", () => {
     expect(amountFromInput("  50,00  ")).toBe(50);
   });
 
-  it("retorna NaN para string vazia", () => {
-    expect(amountFromInput("")).toBeNaN();
+  it("retorna 0 para string vazia", () => {
+    expect(amountFromInput("")).toBe(0);
   });
 
   it("converte centavos corretamente", () => {
