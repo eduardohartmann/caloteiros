@@ -26,7 +26,7 @@ function ActionMenu({ actions, loading }) {
         disabled={loading}
         aria-label="Opções"
       >
-        ⋯
+        ⋮
       </button>
       {open && (
         <ul className="action-menu-dropdown">

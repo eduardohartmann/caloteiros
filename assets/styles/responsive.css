@@ -252,8 +252,6 @@
     justify-content: flex-end;
   }
 
-  .settings-item-actions { opacity: 1; }
-
   .toast { bottom: 80px; }
 }
 

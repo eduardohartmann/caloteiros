@@ -23,15 +23,15 @@
 /* lista de itens */
 .settings-list {
   display: grid;
-  gap: 2px;
+  gap: 0;
   margin-top: 4px;
 }
 
 .settings-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   transition: background .12s;
   flex-wrap: nowrap;
@@ -48,17 +48,17 @@
 .settings-item-icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  font-size: 1.1rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
 .settings-item-name {
   flex: 1;
   min-width: 0;
-  font-size: .88rem;
+  font-size: .84rem;
   font-weight: 600;
   color: var(--ink);
   overflow: hidden;
@@ -82,11 +82,8 @@
   display: flex;
   gap: 4px;
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity .12s;
+  margin-left: auto;
 }
-
-.settings-item:hover .settings-item-actions { opacity: 1; }
 
 .settings-item-actions .ghost-button {
   min-height: 32px;
@@ -161,7 +158,6 @@
 
 /* responsivo */
 @media (max-width: 760px) {
-  .settings-item-actions { opacity: 1; }
   .settings-header-actions { width: 100%; justify-content: flex-end; }
 }
 
@@ -191,16 +187,17 @@
 .action-menu-trigger {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   cursor: pointer;
   transition: background .12s, color .12s;
+  line-height: 1;
 }
 
 .action-menu-trigger:hover {
