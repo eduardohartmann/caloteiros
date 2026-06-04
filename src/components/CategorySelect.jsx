@@ -13,7 +13,6 @@ export default function CategorySelect({ options, value, onChange }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef(null);
-  const inputRef = useRef(null);
 
   const selected = options.find((o) => o.id === value);
 
@@ -29,9 +28,7 @@ export default function CategorySelect({ options, value, onChange }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  useEffect(() => {
-    if (open && inputRef.current) inputRef.current.focus();
-  }, [open]);
+
 
   const filtered = search.trim()
     ? options.filter((o) => o.name.toLowerCase().includes(search.toLowerCase()))
@@ -65,7 +62,6 @@ export default function CategorySelect({ options, value, onChange }) {
         <div className="category-select-dropdown">
           <div className="category-select-search">
             <input
-              ref={inputRef}
               type="text"
               placeholder="Buscar categoria..."
               value={search}
