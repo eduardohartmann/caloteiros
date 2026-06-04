@@ -132,12 +132,12 @@ export default function TransactionForm({
 
   return (
     <section className="panel form-panel" id="new-transaction" aria-labelledby="form-title">
-      <div className="panel-header">
-        <div>
-          <h3 id="form-title">{editing ? "Editar lançamento" : "Novo lançamento"}</h3>
+      {editing && (
+        <div className="panel-header">
+          <div />
+          <button className="link-button" type="button" onClick={onCancel}>Cancelar</button>
         </div>
-        {editing && <button className="link-button" type="button" onClick={onCancel}>Cancelar</button>}
-      </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="type-toggle" role="group" aria-label="Tipo">
           {isTransfer && editing ? (
