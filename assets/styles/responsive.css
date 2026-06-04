@@ -225,7 +225,7 @@
   .panel { padding: 16px 14px; }
 
   /* ── formulário ── */
-  .form-row { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr 1fr; }
 
   /* ── tabela de lançamentos ── */
   .transactions-header {
