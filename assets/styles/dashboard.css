@@ -360,10 +360,19 @@ form {
 }
 
 .type-toggle-cancel {
-  flex: none;
-  margin-left: 12px;
-  padding: 0 10px;
-  white-space: nowrap;
+  display: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.form-actions .primary-button,
+.form-actions .danger-button {
+  flex: 1;
+  margin-top: 0;
 }
 
 .form-row {
