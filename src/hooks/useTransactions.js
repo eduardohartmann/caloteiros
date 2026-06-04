@@ -81,7 +81,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
           .toLocaleLowerCase("pt-BR")
           .includes(query);
       })
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   }, [allTransactions, transactions, month, search, settings?.categoryMap, settings?.accountMap]);
 
   function resetForm() {
