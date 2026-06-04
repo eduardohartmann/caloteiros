@@ -68,16 +68,20 @@ async function loadMonthTransactions(token, spreadsheetId, month) {
  */
 function buildSuggestions(allTransactions) {
   const map = new Map();
-  for (const t of allTransactions) {
+  // Itera do mais recente para o mais antigo para manter a ordem de recência
+  for (let i = allTransactions.length - 1; i >= 0; i--) {
+    const t = allTransactions[i];
     const desc = t.description.trim();
     if (!desc) continue;
     const key = `${desc.toLocaleLowerCase("pt-BR")}|${t.category}|${t.account}`;
-    map.set(key, {
-      description: desc,
-      type: t.type,
-      category: t.category,
-      account: t.account
-    });
+    if (!map.has(key)) {
+      map.set(key, {
+        description: desc,
+        type: t.type,
+        category: t.category,
+        account: t.account
+      });
+    }
   }
   return Array.from(map.values());
 }

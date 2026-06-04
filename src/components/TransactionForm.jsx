@@ -84,7 +84,7 @@ export default function TransactionForm({
         return true;
       })
       .filter((s) => s.description.toLocaleLowerCase("pt-BR").includes(query))
-      .slice(0, 6);
+      .slice(0, 3);
   }, [transaction.description, suggestions, isTransfer]);
 
   function applySuggestion(suggestion) {
