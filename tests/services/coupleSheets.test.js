@@ -5,53 +5,35 @@
  *   id | data | descricao | valorTotal | valorDevido | status | cadastradoPor | criadoEm | transacaoOrigem | transacaoPagamento
  */
 import { describe, it, expect } from "vitest";
+import { parseAmount, rowToEntry, entryToRow } from "../../src/services/coupleSheets.js";
 
-// Reimplementação fiel de parseAmount (coupleSheets.js)
-function parseAmount(raw) {
-  if (raw == null || raw === "") return 0;
-  if (typeof raw === "string" && raw.includes(",")) {
-    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
-  }
-  return Number(raw) || 0;
-}
+// ─── parseAmount (couple) ─────────────────────────────────────────────────────
 
-// Reimplementação fiel de rowToEntry (coupleSheets.js)
-function rowToEntry(row, index) {
-  if (!row[0]) return null;
-  return {
-    id: row[0],
-    date: row[1],
-    description: row[2],
-    totalAmount: parseAmount(row[3]),
-    amountDue: parseAmount(row[4]),
-    status: row[5] || "pendente",
-    createdBy: row[6] || "",
-    createdAt: row[7] || "",
-    sourceTransactionId: row[8] || "",
-    paymentTransactionId: row[9] || "",
-    rowNumber: index + 2
-  };
-}
+describe("parseAmount (coupleSheets)", () => {
+  it("retorna 0 para null", () => {
+    expect(parseAmount(null)).toBe(0);
+  });
 
-// Reimplementação fiel de entryToRow (coupleSheets.js)
-function entryToRow(entry) {
-  return [
-    entry.id,
-    entry.date,
-    entry.description,
-    entry.totalAmount,
-    entry.amountDue,
-    entry.status,
-    entry.createdBy,
-    entry.createdAt,
-    entry.sourceTransactionId || "",
-    entry.paymentTransactionId || ""
-  ];
-}
+  it("retorna 0 para string vazia", () => {
+    expect(parseAmount("")).toBe(0);
+  });
+
+  it("converte formato brasileiro com milhar", () => {
+    expect(parseAmount("1.234,56")).toBe(1234.56);
+  });
+
+  it("converte número direto", () => {
+    expect(parseAmount(123.45)).toBe(123.45);
+  });
+
+  it("converte centavos em formato brasileiro", () => {
+    expect(parseAmount("0,01")).toBe(0.01);
+  });
+});
 
 // ─── rowToEntry ───────────────────────────────────────────────────────────────
 
-describe("rowToEntry (couple contract spec)", () => {
+describe("rowToEntry", () => {
   it("converte linha completa para entry", () => {
     const row = [
       "entry-1", "2024-03-15", "Supermercado",
@@ -102,7 +84,7 @@ describe("rowToEntry (couple contract spec)", () => {
 
 // ─── entryToRow ───────────────────────────────────────────────────────────────
 
-describe("entryToRow (couple contract spec)", () => {
+describe("entryToRow", () => {
   it("serializa entry completo", () => {
     const entry = {
       id: "entry-1",
@@ -160,13 +142,12 @@ describe("entryToRow (couple contract spec)", () => {
   });
 
   it("divisão 50/50 com precisão de centavos", () => {
-    // Simula a lógica do useTransactions: divisão inteira em centavos
     const amount = 151.73;
     const totalCents = Math.round(amount * 100);
     const halfCents = Math.floor(totalCents / 2);
     const amountDue = halfCents / 100;
 
-    expect(amountDue).toBe(75.86); // floor(15173/2) = 7586 → 75.86
+    expect(amountDue).toBe(75.86);
     expect(totalCents).toBe(15173);
 
     const entry = {

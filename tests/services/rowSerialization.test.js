@@ -3,58 +3,69 @@
  *
  * Valida que o formato da linha na planilha é consistente:
  * [id, data, tipo, descricao, categoria, conta, valor, status, criadoEm, atualizadoEm, compartilhado, linkedId]
- *
- * Estas funções são privadas, então testamos o contrato aqui.
  */
 import { describe, it, expect } from "vitest";
+import { parseAmount, fromRow, toRow } from "../../src/services/googleSheets.js";
 
-// Reimplementação fiel de fromRow (googleSheets.js)
-function parseAmount(raw) {
-  if (raw == null || raw === "") return 0;
-  if (typeof raw === "string" && raw.includes(",")) {
-    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
-  }
-  return Number(raw) || 0;
-}
+// ─── parseAmount ──────────────────────────────────────────────────────────────
 
-function fromRow(row, index) {
-  if (!row[0]) return null;
-  return {
-    id: row[0],
-    date: row[1],
-    type: row[2],
-    description: row[3],
-    category: row[4],
-    account: row[5],
-    amount: parseAmount(row[6]),
-    createdAt: row[8] || "",
-    shared: row[10] === "true",
-    linkedId: row[11] || "",
-    rowNumber: index + 2
-  };
-}
+describe("parseAmount (googleSheets)", () => {
+  it("retorna 0 para null", () => {
+    expect(parseAmount(null)).toBe(0);
+  });
 
-// Reimplementação fiel de toRow (googleSheets.js)
-function toRow(transaction) {
-  return [
-    transaction.id,
-    transaction.date,
-    transaction.type,
-    transaction.description,
-    transaction.category,
-    transaction.account,
-    transaction.amount,
-    "Confirmado",
-    transaction.createdAt,
-    new Date().toISOString(),
-    transaction.split ? "true" : "",
-    transaction.linkedId || ""
-  ];
-}
+  it("retorna 0 para undefined", () => {
+    expect(parseAmount(undefined)).toBe(0);
+  });
+
+  it("retorna 0 para string vazia", () => {
+    expect(parseAmount("")).toBe(0);
+  });
+
+  it("converte número direto", () => {
+    expect(parseAmount(123.45)).toBe(123.45);
+  });
+
+  it("converte string numérica simples", () => {
+    expect(parseAmount("100")).toBe(100);
+  });
+
+  it("converte string com ponto decimal (padrão EN)", () => {
+    expect(parseAmount("99.99")).toBe(99.99);
+  });
+
+  it("converte formato brasileiro simples (vírgula decimal)", () => {
+    expect(parseAmount("15,00")).toBe(15);
+  });
+
+  it("converte formato brasileiro com milhar", () => {
+    expect(parseAmount("1.234,56")).toBe(1234.56);
+  });
+
+  it("converte formato brasileiro grande", () => {
+    expect(parseAmount("1.000.000,99")).toBe(1000000.99);
+  });
+
+  it("converte centavos em formato brasileiro", () => {
+    expect(parseAmount("0,01")).toBe(0.01);
+  });
+
+  it("retorna 0 para string não numérica", () => {
+    expect(parseAmount("abc")).toBe(0);
+  });
+
+  it("converte zero", () => {
+    expect(parseAmount(0)).toBe(0);
+  });
+
+  it("converte string '0,00'", () => {
+    expect(parseAmount("0,00")).toBe(0);
+  });
+});
 
 // ─── fromRow ──────────────────────────────────────────────────────────────────
 
-describe("fromRow (contract spec)", () => {
+describe("fromRow", () => {
   it("converte linha completa para objeto de transação", () => {
     const row = [
       "uuid-123", "2024-03-15", "expense", "Supermercado",
@@ -74,7 +85,7 @@ describe("fromRow (contract spec)", () => {
     expect(result.createdAt).toBe("2024-03-15T10:00:00Z");
     expect(result.shared).toBe(true);
     expect(result.linkedId).toBe("linked-456");
-    expect(result.rowNumber).toBe(2); // index 0 → row 2 (header is row 1)
+    expect(result.rowNumber).toBe(2);
   });
 
   it("retorna null para linha sem id", () => {
@@ -91,7 +102,7 @@ describe("fromRow (contract spec)", () => {
     expect(result.createdAt).toBe("");
     expect(result.shared).toBe(false);
     expect(result.linkedId).toBe("");
-    expect(result.rowNumber).toBe(7); // index 5 → row 7
+    expect(result.rowNumber).toBe(7);
   });
 
   it("parseia amount em formato brasileiro", () => {
@@ -110,7 +121,7 @@ describe("fromRow (contract spec)", () => {
 
 // ─── toRow ────────────────────────────────────────────────────────────────────
 
-describe("toRow (contract spec)", () => {
+describe("toRow", () => {
   it("serializa transação de despesa", () => {
     const transaction = {
       id: "uuid-123",
@@ -126,18 +137,18 @@ describe("toRow (contract spec)", () => {
     };
     const row = toRow(transaction);
 
-    expect(row[0]).toBe("uuid-123");       // id
-    expect(row[1]).toBe("2024-03-15");     // data
-    expect(row[2]).toBe("expense");        // tipo
-    expect(row[3]).toBe("Supermercado");   // descricao
-    expect(row[4]).toBe("cat-alimentacao"); // categoria
-    expect(row[5]).toBe("acc-corrente");   // conta
-    expect(row[6]).toBe(150.50);           // valor
-    expect(row[7]).toBe("Confirmado");     // status (sempre fixo)
-    expect(row[8]).toBe("2024-03-15T10:00:00Z"); // criadoEm
-    expect(row[10]).toBe("");              // compartilhado (false → "")
-    expect(row[11]).toBe("");              // linkedId
-    expect(row).toHaveLength(12);          // total de colunas
+    expect(row[0]).toBe("uuid-123");
+    expect(row[1]).toBe("2024-03-15");
+    expect(row[2]).toBe("expense");
+    expect(row[3]).toBe("Supermercado");
+    expect(row[4]).toBe("cat-alimentacao");
+    expect(row[5]).toBe("acc-corrente");
+    expect(row[6]).toBe(150.50);
+    expect(row[7]).toBe("Confirmado");
+    expect(row[8]).toBe("2024-03-15T10:00:00Z");
+    expect(row[10]).toBe("");
+    expect(row[11]).toBe("");
+    expect(row).toHaveLength(12);
   });
 
   it("marca compartilhado quando split=true", () => {
