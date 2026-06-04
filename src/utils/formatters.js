@@ -32,40 +32,36 @@ export function amountFromInput(value) {
 }
 
 /**
- * Filtra entrada do campo de valor, permitindo apenas dígitos e um separador decimal.
- * Aceita vírgula ou ponto como separador decimal (padrão BR e teclados numéricos).
- * Não aplica máscara de milhar durante a digitação para evitar conflitos.
- * Limita a 2 casas decimais.
+ * Aplica máscara monetária estilo Nubank.
+ * O usuário digita apenas números e os 2 últimos dígitos são sempre centavos.
+ * A vírgula decimal é inserida automaticamente.
  *
  * Exemplos:
- *   "16000"   → "16000"
- *   "16000,"  → "16000,"
- *   "160,50"  → "160,50"
- *   "abc123"  → "123"
- *   "10.5"    → "10,5"
+ *   "1"       → "0,01"
+ *   "15"      → "0,15"
+ *   "150"     → "1,50"
+ *   "1500"    → "15,00"
+ *   "123456"  → "1.234,56"
  */
 export function maskCurrency(raw) {
-  // Converte ponto em vírgula (teclado decimal usa ponto)
-  let value = raw.replace(".", ",");
-
-  // Remove tudo que não é dígito ou vírgula
-  value = value.replace(/[^\d,]/g, "");
+  // Remove tudo que não é dígito
+  const digits = raw.replace(/\D/g, "");
 
   // Se ficou vazio, retorna vazio
-  if (!value) return "";
+  if (!digits) return "";
 
-  // Permite apenas uma vírgula (mantém a primeira)
-  const parts = value.split(",");
-  if (parts.length > 2) {
-    value = parts[0] + "," + parts.slice(1).join("");
-  }
+  // Converte para centavos (inteiro)
+  const cents = parseInt(digits, 10);
+  if (cents === 0) return "0,00";
 
-  // Limita decimal a 2 dígitos
-  const [intPart, decPart] = value.split(",");
+  // Formata com 2 casas decimais
+  const formatted = (cents / 100).toFixed(2);
 
-  if (decPart !== undefined) {
-    return `${intPart},${decPart.slice(0, 2)}`;
-  }
+  // Separa inteiro e decimal
+  const [intPart, decPart] = formatted.split(".");
 
-  return intPart;
+  // Aplica separador de milhar
+  const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+  return `${withThousands},${decPart}`;
 }
