@@ -371,6 +371,16 @@ form {
   margin-top: 0;
 }
 
+.form-row-checkboxes {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-row-checkboxes .split-checkbox {
+  flex: 1;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

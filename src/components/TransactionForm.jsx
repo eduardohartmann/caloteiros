@@ -190,19 +190,18 @@ export default function TransactionForm({
             )}
           </label>
 
-        <div className="form-row">
-          <label>
-            Valor
-            <input required inputMode="numeric" placeholder="0,00" value={transaction.amount} onChange={(e) => changeField("amount", maskCurrency(e.target.value))} />
-          </label>
-          <label>
-            Data
-            <input type="date" required value={transaction.date} onChange={(e) => changeField("date", e.target.value)} />
-          </label>
-        </div>
+        <label>
+          Valor
+          <input required inputMode="numeric" placeholder="0,00" value={transaction.amount} onChange={(e) => changeField("amount", maskCurrency(e.target.value))} />
+        </label>
+
+        <label>
+          Data
+          <input type="date" required value={transaction.date} onChange={(e) => changeField("date", e.target.value)} />
+        </label>
 
         {isTransfer ? (
-          <div className="form-row">
+          <>
             <label>
               Conta origem
               <AccountSelect
@@ -219,7 +218,7 @@ export default function TransactionForm({
                 onChange={setDestinationAccount}
               />
             </label>
-          </div>
+          </>
         ) : (
           <>
             <label>
@@ -240,26 +239,27 @@ export default function TransactionForm({
               />
             </label>
 
-            {!editing && transaction.type === "expense" && (
-              <label className="split-checkbox">
-                <input
-                  type="checkbox"
-                  checked={transaction.split || false}
-                  onChange={(e) => changeField("split", e.target.checked)}
-                />
-                <span>Dividir</span>
-              </label>
-            )}
-
             {!editing && (
-              <label className="split-checkbox">
-                <input
-                  type="checkbox"
-                  checked={continueMode}
-                  onChange={(e) => onContinueModeChange(e.target.checked)}
-                />
-                <span>Inserir em sequência</span>
-              </label>
+              <div className="form-row-checkboxes">
+                {transaction.type === "expense" && (
+                  <label className="split-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={transaction.split || false}
+                      onChange={(e) => changeField("split", e.target.checked)}
+                    />
+                    <span>Dividir</span>
+                  </label>
+                )}
+                <label className="split-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={continueMode}
+                    onChange={(e) => onContinueModeChange(e.target.checked)}
+                  />
+                  <span>Inserir em sequência</span>
+                </label>
+              </div>
             )}
           </>
         )}
