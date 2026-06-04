@@ -5,7 +5,8 @@
  * [id, data, tipo, descricao, categoria, conta, valor, status, criadoEm, atualizadoEm, compartilhado, linkedId]
  */
 import { describe, it, expect } from "vitest";
-import { parseAmount, fromRow, toRow } from "../../src/services/googleSheets.js";
+import { fromRow, toRow } from "../../src/services/googleSheets.js";
+import { parseAmount } from "../../src/utils/formatters.js";
 
 // ─── parseAmount ──────────────────────────────────────────────────────────────
 

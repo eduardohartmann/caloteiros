@@ -32,6 +32,20 @@ export function amountFromInput(value) {
 }
 
 /**
+ * Converte um valor bruto da planilha (string ou número) em número.
+ * Suporta formato brasileiro (1.234,56) e numérico padrão.
+ * @param {string|number|null|undefined} raw - Valor bruto da planilha.
+ * @returns {number}
+ */
+export function parseAmount(raw) {
+  if (raw == null || raw === "") return 0;
+  if (typeof raw === "string" && raw.includes(",")) {
+    return Number(raw.replace(/\./g, "").replace(",", ".")) || 0;
+  }
+  return Number(raw) || 0;
+}
+
+/**
  * Aplica máscara monetária estilo Nubank.
  * O usuário digita apenas números e os 2 últimos dígitos são sempre centavos.
  * A vírgula decimal é inserida automaticamente.
