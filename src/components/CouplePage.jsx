@@ -209,35 +209,34 @@ function CoupleContent({
   );
 }
 
-// ─── tabela de entradas ───────────────────────────────────────────────────────
+// ─── lista de entradas (layout em 2 sub-linhas) ──────────────────────────────
 
 function EntryTable({ entries, actions }) {
   return (
-    <div className="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Descrição</th>
-            <th>Data</th>
-            <th className="number">Total</th>
-            <th className="number">Parte devida</th>
-            <th>Cadastrado por</th>
-            {actions && <th />}
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => (
-            <tr key={entry.id}>
-              <td>{entry.description}</td>
-              <td>{dateBR(entry.date)}</td>
-              <td className="number">{brl(entry.totalAmount)}</td>
-              <td className="number"><span className="value expense">- {brl(entry.amountDue)}</span></td>
-              <td>{entry.createdBy}</td>
-              {actions && <td className="row-actions">{actions(entry)}</td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="couple-entries">
+      {entries.map((entry) => (
+        <div key={entry.id} className="couple-entry-card">
+          <div className="couple-entry-row couple-entry-row--top">
+            <span className="couple-entry-desc">{entry.description}</span>
+            <span className="couple-entry-date">{dateBR(entry.date)}</span>
+            {actions && <span className="couple-entry-actions">{actions(entry)}</span>}
+          </div>
+          <div className="couple-entry-row couple-entry-row--bottom">
+            <span className="couple-entry-detail">
+              <small>Total</small>
+              <strong>{brl(entry.totalAmount)}</strong>
+            </span>
+            <span className="couple-entry-detail couple-entry-detail--due">
+              <small>Parte devida</small>
+              <strong className="value expense">- {brl(entry.amountDue)}</strong>
+            </span>
+            <span className="couple-entry-detail">
+              <small>Por</small>
+              <strong>{entry.createdBy}</strong>
+            </span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
