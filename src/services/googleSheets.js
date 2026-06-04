@@ -13,7 +13,7 @@ import {
 
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
-function parseAmount(raw) {
+export function parseAmount(raw) {
   if (raw == null || raw === "") return 0;
   // Se contém vírgula, assume formato brasileiro (1.234,56 → 1234.56)
   if (typeof raw === "string" && raw.includes(",")) {
@@ -22,7 +22,7 @@ function parseAmount(raw) {
   return Number(raw) || 0;
 }
 
-function fromRow(row, index) {
+export function fromRow(row, index) {
   if (!row[0]) return null;
   return {
     id: row[0],
@@ -39,7 +39,7 @@ function fromRow(row, index) {
   };
 }
 
-function toRow(transaction) {
+export function toRow(transaction) {
   return [
     transaction.id,
     transaction.date,
@@ -76,7 +76,7 @@ async function loadMonthTransactions(token, spreadsheetId, month) {
  * Usa chave composta (descrição + categoria + conta) para manter variações.
  * Exclui sugestões de contas inativas.
  */
-function buildSuggestions(allTransactions, accounts) {
+export function buildSuggestions(allTransactions, accounts) {
   const activeAccountIds = accounts
     ? new Set(accounts.filter((a) => a.active).map((a) => a.id))
     : null;

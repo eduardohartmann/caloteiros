@@ -29,7 +29,7 @@ const COUPLE_HEADER = [
 
 // ─── conversão de linhas ──────────────────────────────────────────────────────
 
-function parseAmount(raw) {
+export function parseAmount(raw) {
   if (raw == null || raw === "") return 0;
   // Se contém vírgula, assume formato brasileiro (1.234,56 → 1234.56)
   if (typeof raw === "string" && raw.includes(",")) {
@@ -38,7 +38,7 @@ function parseAmount(raw) {
   return Number(raw) || 0;
 }
 
-function rowToEntry(row, index) {
+export function rowToEntry(row, index) {
   if (!row[0]) return null;
   return {
     id: row[0],
@@ -55,7 +55,7 @@ function rowToEntry(row, index) {
   };
 }
 
-function entryToRow(entry) {
+export function entryToRow(entry) {
   return [
     entry.id,
     entry.date,
