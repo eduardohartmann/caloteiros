@@ -81,7 +81,7 @@ export default function TransactionForm({
     return suggestions
       .filter((s) => {
         if (isTransfer) return s.category === TRANSFER_CATEGORY_ID;
-        return true;
+        return s.category !== TRANSFER_CATEGORY_ID;
       })
       .filter((s) => s.description.toLocaleLowerCase("pt-BR").includes(query))
       .slice(0, 3);
