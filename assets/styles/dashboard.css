@@ -107,7 +107,7 @@
 
 .route-page {
   display: grid;
-  gap: 22px;
+  gap: 12px;
   min-width: 0;
   overflow: visible;
 }
