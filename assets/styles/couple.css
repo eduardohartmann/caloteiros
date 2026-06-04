@@ -249,7 +249,7 @@
 }
 
 .couple-entry-row--top {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .couple-entry-desc {
@@ -262,12 +262,6 @@
   text-overflow: ellipsis;
 }
 
-.couple-entry-date {
-  font-size: .75rem;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
 .couple-entry-actions {
   display: flex;
   gap: 8px;
@@ -276,33 +270,32 @@
 
 .couple-entry-row--bottom {
   display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
 }
 
-.couple-entry-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.couple-entry-detail small {
-  font-size: .65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .04em;
+.couple-entry-date {
+  font-size: .75rem;
   color: var(--muted);
+  white-space: nowrap;
 }
 
-.couple-entry-detail strong {
-  font-size: .82rem;
-  color: var(--ink);
+.couple-entry-amount {
+  font-size: .8rem;
   font-weight: 600;
+  color: var(--ink);
 }
 
-.couple-entry-detail--due strong {
-  color: var(--red);
+.couple-entry-amount small {
+  font-size: .75rem;
   font-weight: 700;
+  color: var(--red);
+}
+
+.couple-entry-person {
+  font-size: .75rem;
+  color: var(--muted);
+  margin-left: auto;
 }
 
 /* ── responsivo ──────────────────────────────────────────────────────────────── */
