@@ -97,16 +97,18 @@ function CoupleContent({
 
   return (
     <div className="couple-panel">
-      {/* Código de convite */}
-      <div className="panel couple-code-panel">
-        <div className="panel-header">
-          <div>
-            <h3>Planilha do casal</h3>
-            <p>Código para compartilhar: <code className="couple-code-inline">{spreadsheetId}</code></p>
+      {/* Código de convite — exibe apenas se o parceiro ainda não entrou */}
+      {!config.nomeB && (
+        <div className="panel couple-code-panel">
+          <div className="panel-header">
+            <div>
+              <h3>Planilha do casal</h3>
+              <p>Código para compartilhar: <code className="couple-code-inline">{spreadsheetId}</code></p>
+            </div>
+            <button type="button" className="ghost-button" onClick={() => navigator.clipboard?.writeText(spreadsheetId)}>Copiar</button>
           </div>
-          <button type="button" className="ghost-button" onClick={() => navigator.clipboard?.writeText(spreadsheetId)}>Copiar</button>
         </div>
-      </div>
+      )}
 
       {/* Cards de resumo */}
       <div className="couple-summary">
