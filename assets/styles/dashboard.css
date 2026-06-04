@@ -529,26 +529,26 @@ td:first-child {
 .split-checkbox {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
   background: var(--teal-soft);
   cursor: pointer;
-  font-size: .85rem !important;
+  font-size: .8rem !important;
   color: var(--teal-dark) !important;
   font-weight: 600 !important;
 }
 
 .split-checkbox input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   margin: 0;
   accent-color: var(--teal);
   cursor: pointer;
 }
 
 .split-checkbox span {
-  font-size: .85rem;
+  font-size: .8rem;
   color: var(--teal-dark);
 }
 
