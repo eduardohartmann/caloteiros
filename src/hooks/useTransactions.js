@@ -44,6 +44,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState(emptyTransaction);
   const [previousRoute, setPreviousRoute] = useState(null);
+  const [continueMode, setContinueMode] = useState(false);
 
   function handleError(error) {
     if (error instanceof TokenExpiredError) {
@@ -207,7 +208,12 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
         return exists ? prev : [...prev, newSuggestion];
       });
 
-      resetForm();
+      // Modo "inserir em sequência": mantém form aberto com mesma data
+      if (continueMode && !current) {
+        setDraft({ ...emptyTransaction(), date: transaction.date });
+      } else {
+        resetForm();
+      }
       notify(current ? "Lançamento atualizado." : "Lançamento salvo.");
     } catch (error) {
       handleError(error);
@@ -341,6 +347,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
     month, setMonth: changeMonth, search, setSearch,
     draft, setDraft, resetForm,
     saveTransaction, editTransaction, removeTransaction, transferBetweenAccounts,
-    transactionsReady, saving
+    transactionsReady, saving,
+    continueMode, setContinueMode
   };
 }

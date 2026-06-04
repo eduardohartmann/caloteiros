@@ -359,10 +359,6 @@ form {
   box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
 }
 
-.type-toggle-cancel {
-  display: none;
-}
-
 .form-actions {
   display: flex;
   gap: 10px;
