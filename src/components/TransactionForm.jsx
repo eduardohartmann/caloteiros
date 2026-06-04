@@ -81,10 +81,10 @@ export default function TransactionForm({
     return suggestions
       .filter((s) => {
         if (isTransfer) return s.category === TRANSFER_CATEGORY_ID;
-        return true;
+        return s.category !== TRANSFER_CATEGORY_ID;
       })
       .filter((s) => s.description.toLocaleLowerCase("pt-BR").includes(query))
-      .slice(0, 6);
+      .slice(0, 3);
   }, [transaction.description, suggestions, isTransfer]);
 
   function applySuggestion(suggestion) {
@@ -135,7 +135,6 @@ export default function TransactionForm({
       <div className="panel-header">
         <div>
           <h3 id="form-title">{editing ? "Editar lançamento" : "Novo lançamento"}</h3>
-          <p>Registre em poucos segundos</p>
         </div>
         {editing && <button className="link-button" type="button" onClick={onCancel}>Cancelar</button>}
       </div>

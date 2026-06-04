@@ -17,7 +17,9 @@ import useTransactions from "./hooks/useTransactions.js";
 import useCouple from "./hooks/useCouple.js";
 import useSettings from "./hooks/useSettings.js";
 import useConfirm from "./hooks/useConfirm.js";
+import useSwipeMonth from "./hooks/useSwipeMonth.js";
 import Brand from "./components/Brand.jsx";
+import { useRef } from "react";
 
 export default function App() {
   const route = useRouter();
@@ -27,6 +29,8 @@ export default function App() {
   const settings = useSettings(auth);
   const couple = useCouple(auth, notify, confirm);
   const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings);
+  const workspaceRef = useRef(null);
+  useSwipeMonth(workspaceRef, txns.month, txns.setMonth);
 
   function handleDisconnect() {
     auth.disconnect();
@@ -85,7 +89,7 @@ export default function App() {
           spreadsheetId={auth.spreadsheetId}
           onNavigate={navigate}
         />
-        <section className="workspace" id="dashboard-content" aria-label="Painel financeiro">
+        <section className="workspace" ref={workspaceRef} id="dashboard-content" aria-label="Painel financeiro">
           <DashboardHeader
             name={auth.accountName}
             title={routeTitle}
