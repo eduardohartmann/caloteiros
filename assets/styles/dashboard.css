@@ -359,6 +359,13 @@ form {
   box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
 }
 
+.type-toggle-cancel {
+  flex: none;
+  margin-left: 12px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
