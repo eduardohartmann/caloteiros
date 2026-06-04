@@ -46,7 +46,7 @@
     flex-direction: column;
     min-height: 100vh;
     /* espaço para a bottom nav */
-    padding-bottom: 68px;
+    padding-bottom: 56px;
   }
 
   /* ── sidebar vira bottom nav ── */
@@ -58,7 +58,7 @@
     right: 0;
     width: 100%;
     min-height: 0;
-    height: 64px;
+    height: 52px;
     padding: 0;
     flex-direction: row;
     align-items: stretch;

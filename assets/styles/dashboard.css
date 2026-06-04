@@ -166,7 +166,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 17px;
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 }
 
 /* Saldo total ocupa linha inteira */
