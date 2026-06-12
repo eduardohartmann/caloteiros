@@ -242,21 +242,23 @@ export default function TransactionForm({
             {!editing && (
               <div className="form-row-checkboxes">
                 {transaction.type === "expense" && (
-                  <label className="split-checkbox">
+                  <label className="mini-toggle">
                     <input
                       type="checkbox"
                       checked={transaction.split || false}
                       onChange={(e) => changeField("split", e.target.checked)}
                     />
+                    <span className="toggle-track"></span>
                     <span>Dividir</span>
                   </label>
                 )}
-                <label className="split-checkbox">
+                <label className="mini-toggle">
                   <input
                     type="checkbox"
                     checked={continueMode}
                     onChange={(e) => onContinueModeChange(e.target.checked)}
                   />
+                  <span className="toggle-track"></span>
                   <span>Inserir em sequência</span>
                 </label>
               </div>
