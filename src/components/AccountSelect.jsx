@@ -18,6 +18,7 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef(null);
+  const touchStartY = useRef(null);
   const isMobile = useMediaQuery("(max-width: 760px)");
 
   const selected = options.find((o) => o.id === value);
@@ -57,6 +58,21 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
     setSearch("");
   }
 
+  // Detecta se o toque foi um tap (sem arrastar) ou um scroll
+  function handleTouchStart(e) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e, id) {
+    if (touchStartY.current === null) return;
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    touchStartY.current = null;
+    // Se moveu menos de 10px, considera um tap
+    if (deltaY < 10) {
+      handleSelect(id);
+    }
+  }
+
   const displayLabel = selected
     ? selected.name
     : (allowAll && !value ? "Todas as contas" : placeholder);
@@ -78,7 +94,6 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
                 placeholder="Buscar conta..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                autoFocus
               />
             </div>
             <ul className="sheet-list">
@@ -86,7 +101,8 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
                 <li
                   className={!value ? "selected" : ""}
                   onMouseDown={() => handleSelect("")}
-                  onTouchEnd={(e) => { e.preventDefault(); handleSelect(""); }}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={(e) => handleTouchEnd(e, "")}
                 >
                   <span className="sheet-item-icon">📋</span>
                   <span>Todas as contas</span>
@@ -97,7 +113,8 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
                   key={opt.id}
                   className={opt.id === value ? "selected" : ""}
                   onMouseDown={() => handleSelect(opt.id)}
-                  onTouchEnd={(e) => { e.preventDefault(); handleSelect(opt.id); }}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={(e) => handleTouchEnd(e, opt.id)}
                 >
                   <span className="sheet-item-icon">🏦</span>
                   <span>{opt.name}</span>
@@ -123,7 +140,6 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
               placeholder="Buscar conta..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autoFocus
             />
           </div>
           <ul className="category-select-list">
