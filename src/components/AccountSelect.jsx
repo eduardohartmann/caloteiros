@@ -78,7 +78,7 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
                 placeholder="Buscar conta..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                autoFocus
+
               />
             </div>
             <ul className="sheet-list">
@@ -123,7 +123,6 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
               placeholder="Buscar conta..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autoFocus
             />
           </div>
           <ul className="category-select-list">

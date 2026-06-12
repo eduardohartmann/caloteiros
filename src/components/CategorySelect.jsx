@@ -72,7 +72,7 @@ export default function CategorySelect({ options, value, onChange }) {
                 placeholder="Buscar categoria..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                autoFocus
+
               />
             </div>
             <ul className="sheet-list">
@@ -108,7 +108,6 @@ export default function CategorySelect({ options, value, onChange }) {
               placeholder="Buscar categoria..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autoFocus
             />
           </div>
           <ul className="category-select-list">
