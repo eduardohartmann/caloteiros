@@ -16,6 +16,7 @@ export default function CategorySelect({ options, value, onChange }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef(null);
+  const touchStartY = useRef(null);
   const isMobile = useMediaQuery("(max-width: 760px)");
 
   const selected = options.find((o) => o.id === value);
@@ -55,6 +56,21 @@ export default function CategorySelect({ options, value, onChange }) {
     setSearch("");
   }
 
+  // Detecta se o toque foi um tap (sem arrastar) ou um scroll
+  function handleTouchStart(e) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e, id) {
+    if (touchStartY.current === null) return;
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    touchStartY.current = null;
+    // Se moveu menos de 10px, considera um tap
+    if (deltaY < 10) {
+      handleSelect(id);
+    }
+  }
+
   // ── Bottom sheet (mobile) ───────────────────────────────────────────────────
   const bottomSheet = open && isMobile
     ? createPortal(
@@ -82,7 +98,8 @@ export default function CategorySelect({ options, value, onChange }) {
                   className={opt.id === value ? "selected" : ""}
                   style={{ paddingLeft: `${18 + (opt.depth || 0) * 16}px` }}
                   onMouseDown={() => handleSelect(opt.id)}
-                  onTouchEnd={(e) => { e.preventDefault(); handleSelect(opt.id); }}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={(e) => handleTouchEnd(e, opt.id)}
                 >
                   <span className="sheet-item-icon" style={{ color: opt.color }}>{opt.icon}</span>
                   <span>{opt.name}</span>
