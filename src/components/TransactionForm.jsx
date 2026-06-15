@@ -23,7 +23,9 @@ export default function TransactionForm({
   suggestions = [],
   saving = false,
   continueMode = false,
-  onContinueModeChange
+  onContinueModeChange,
+  coupleReady = false,
+  coupleEntries = []
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [destinationAccount, setDestinationAccount] = useState(
@@ -34,6 +36,22 @@ export default function TransactionForm({
   const isTransfer = transaction.type === "transfer" ||
     (editing && transaction.category === TRANSFER_CATEGORY_ID && transaction.linkedId);
   const typeLocked = Boolean(transaction.lockType);
+
+  // Verifica se a transação já foi dividida com o casal (checar entries + pendingSplits)
+  const alreadySplit = useMemo(() => {
+    if (!editing || !transaction.id) return false;
+    // Checa na planilha do casal em memória
+    if (coupleEntries.some((e) => e.sourceTransactionId === transaction.id)) return true;
+    // Checa na fila de retry (pendingSplits no localStorage)
+    try {
+      const pending = JSON.parse(localStorage.getItem("caloteiros.pendingSplits") || "[]");
+      if (pending.some((e) => e.sourceTransactionId === transaction.id)) return true;
+    } catch { /* ignora */ }
+    return false;
+  }, [editing, transaction.id, coupleEntries]);
+
+  // Pode mostrar checkbox "Dividir" na edição?
+  const canSplitOnEdit = editing && coupleReady && !alreadySplit && transaction.type === "expense" && !isTransfer;
 
   // ── categorias e contas ─────────────────────────────────────────────────────
   const categoryOptions = useMemo(
@@ -260,6 +278,20 @@ export default function TransactionForm({
                   />
                   <span className="toggle-track"></span>
                   <span>Inserir em sequência</span>
+                </label>
+              </div>
+            )}
+
+            {canSplitOnEdit && (
+              <div className="form-row-checkboxes">
+                <label className="mini-toggle">
+                  <input
+                    type="checkbox"
+                    checked={transaction.split || false}
+                    onChange={(e) => changeField("split", e.target.checked)}
+                  />
+                  <span className="toggle-track"></span>
+                  <span>Dividir com parceiro(a)</span>
                 </label>
               </div>
             )}

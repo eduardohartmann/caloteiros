@@ -159,7 +159,8 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
       if (txnMonth !== month) changeMonth(txnMonth);
 
       // #2 + #7 + #9 - Dividir com parceiro (com try/catch e precisão corrigida)
-      if (transaction.split && onSplit && !current) {
+      // Permite dividir na criação OU na edição (proteção contra duplicata fica no TransactionForm)
+      if (transaction.split && onSplit) {
         // #9 - Precisão: divisão inteira em centavos
         const totalCents = Math.round(amount * 100);
         const halfCents = Math.floor(totalCents / 2);
