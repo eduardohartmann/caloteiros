@@ -67,6 +67,7 @@ export default function CategorySelect({ options, value, onChange }) {
     touchStartY.current = null;
     // Se moveu menos de 10px, considera um tap
     if (deltaY < 10) {
+      e.preventDefault(); // Impede ghost click no elemento abaixo
       handleSelect(id);
     }
   }
@@ -97,7 +98,7 @@ export default function CategorySelect({ options, value, onChange }) {
                   key={opt.id}
                   className={opt.id === value ? "selected" : ""}
                   style={{ paddingLeft: `${18 + (opt.depth || 0) * 16}px` }}
-                  onMouseDown={() => handleSelect(opt.id)}
+                  onClick={() => handleSelect(opt.id)}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={(e) => handleTouchEnd(e, opt.id)}
                 >
