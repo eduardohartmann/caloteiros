@@ -149,6 +149,8 @@ export default function App() {
                 saving={txns.saving}
                 continueMode={txns.continueMode}
                 onContinueModeChange={txns.setContinueMode}
+                coupleReady={couple.coupleReady}
+                coupleEntries={couple.coupleEntries}
               />
             </div>
           )}
