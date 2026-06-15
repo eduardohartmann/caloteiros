@@ -69,6 +69,7 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
     touchStartY.current = null;
     // Se moveu menos de 10px, considera um tap
     if (deltaY < 10) {
+      e.preventDefault(); // Impede ghost click no elemento abaixo
       handleSelect(id);
     }
   }
@@ -101,7 +102,7 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
               {allowAll && !search.trim() && (
                 <li
                   className={!value ? "selected" : ""}
-                  onMouseDown={() => handleSelect("")}
+                  onClick={() => handleSelect("")}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={(e) => handleTouchEnd(e, "")}
                 >
@@ -113,7 +114,7 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
                 <li
                   key={opt.id}
                   className={opt.id === value ? "selected" : ""}
-                  onMouseDown={() => handleSelect(opt.id)}
+                  onClick={() => handleSelect(opt.id)}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={(e) => handleTouchEnd(e, opt.id)}
                 >
