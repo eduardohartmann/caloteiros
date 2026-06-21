@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import { useSettingsContext } from "../contexts/SettingsContext.jsx";
 import CategoryBarChart from "./CategoryBarChart.jsx";
 import TransactionCardList from "./TransactionCardList.jsx";
 import EmptyState from "./EmptyState.jsx";
 import PanelHeader from "./PanelHeader.jsx";
 
-export default function IncomePage({ transactions, categoryMap, onEdit }) {
+export default function IncomePage({ transactions, onEdit }) {
+  const { categoryMap } = useSettingsContext();
+
   function resolveCat(id) { return categoryMap?.[id] || id; }
 
   const incomeTransactions = useMemo(

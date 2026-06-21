@@ -1,12 +1,15 @@
-import { useState } from "react";
 import SettingsPage from "./SettingsPage.jsx";
 import ImportTransactions from "./ImportTransactions.jsx";
+import { useSettingsContext } from "../contexts/SettingsContext.jsx";
 
 /**
  * SettingsRoute
  * Página de configurações com abas de categorias, contas e importação.
+ * Consome settings via Context.
  */
-export default function SettingsRoute({ settings, notify, onDisconnect, auth, confirm, onImportComplete }) {
+export default function SettingsRoute({ onDisconnect, auth, onImportComplete }) {
+  const settings = useSettingsContext();
+
   if (!settings.settingsApi) return null;
 
   return (
@@ -18,9 +21,7 @@ export default function SettingsRoute({ settings, notify, onDisconnect, auth, co
       onAccountsChange={settings.setAccounts}
       loading={settings.settingsLoading}
       setLoading={settings.setSettingsLoading}
-      notify={notify}
       onDisconnect={onDisconnect}
-      confirm={confirm}
       importTab={
         <ImportTransactions
           categories={settings.categories}
@@ -31,7 +32,6 @@ export default function SettingsRoute({ settings, notify, onDisconnect, auth, co
           onComplete={() => {
             if (onImportComplete) onImportComplete();
           }}
-          notify={notify}
         />
       }
     />

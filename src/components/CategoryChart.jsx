@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import { useSettingsContext } from "../contexts/SettingsContext.jsx";
 import CategoryBarChart from "./CategoryBarChart.jsx";
 import TransactionCardList from "./TransactionCardList.jsx";
 import EmptyState from "./EmptyState.jsx";
 import PanelHeader from "./PanelHeader.jsx";
 
-export default function CategoryChart({ transactions, categoryMap, onEdit }) {
+export default function CategoryChart({ transactions, onEdit }) {
+  const { categoryMap } = useSettingsContext();
+
   function resolveCat(id) { return categoryMap?.[id] || id; }
 
   const expenseTransactions = useMemo(

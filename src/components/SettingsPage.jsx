@@ -4,6 +4,8 @@ import AccountForm from "./settings/AccountForm.jsx";
 import ImportPanel from "./settings/ImportPanel.jsx";
 import CategoryTree from "./settings/CategoryTree.jsx";
 import AccountList from "./settings/AccountList.jsx";
+import { useNotify } from "../contexts/NotifyContext.jsx";
+import { useConfirmContext } from "../contexts/ConfirmContext.jsx";
 
 // ─── SettingsPage ─────────────────────────────────────────────────────────────
 
@@ -15,11 +17,11 @@ export default function SettingsPage({
   onAccountsChange,
   loading,
   setLoading,
-  notify,
   importTab,
-  onDisconnect,
-  confirm
+  onDisconnect
 }) {
+  const notify = useNotify();
+  const confirm = useConfirmContext();
   const [tab,          setTab]          = useState("categories");
   const [editingCat,   setEditingCat]   = useState(null);   // null | false | category
   const [editingAcc,   setEditingAcc]   = useState(null);
@@ -55,7 +57,8 @@ export default function SettingsPage({
   }
 
   async function handleDeleteCategory(cat) {
-    if (!window.confirm(`Excluir a categoria "${cat.name}"? Subcategorias também serão removidas.`)) return;
+    const ok = await confirm(`Excluir a categoria "${cat.name}"? Subcategorias também serão removidas.`, "Excluir categoria");
+    if (!ok) return;
     setLoading(true);
     try {
       const updated = await settingsApi.deleteCategory(cat);
@@ -112,7 +115,8 @@ export default function SettingsPage({
   }
 
   async function handleDeleteAccount(acc) {
-    if (!window.confirm(`Excluir a conta "${acc.name}"?`)) return;
+    const ok = await confirm(`Excluir a conta "${acc.name}"?`, "Excluir conta");
+    if (!ok) return;
     setLoading(true);
     try {
       const updated = await settingsApi.deleteAccount(acc);
