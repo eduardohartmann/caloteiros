@@ -3,6 +3,7 @@ import { flattenCategoryTree } from "../services/settingsSheets.js";
 import { createResolvers } from "../utils/resolvers.js";
 import { maskCurrency } from "../utils/formatters.js";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import { useSettingsContext } from "../contexts/SettingsContext.jsx";
 import CategorySelect from "./CategorySelect.jsx";
 import AccountSelect from "./AccountSelect.jsx";
 
@@ -18,8 +19,6 @@ export default function TransactionForm({
   onSubmit,
   onRemove,
   onTransfer,
-  categories: dynamicCategories,
-  accounts: dynamicAccounts,
   suggestions = [],
   saving = false,
   continueMode = false,
@@ -27,6 +26,7 @@ export default function TransactionForm({
   coupleReady = false,
   coupleEntries = []
 }) {
+  const { categories: dynamicCategories, accounts: dynamicAccounts } = useSettingsContext();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [destinationAccount, setDestinationAccount] = useState(
     () => transaction.destinationAccount || ""

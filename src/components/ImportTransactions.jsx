@@ -7,6 +7,7 @@ import {
   buildRows,
   importRows
 } from "../services/importTransactions.js";
+import { useNotify } from "../contexts/NotifyContext.jsx";
 
 /**
  * ImportTransactions
@@ -16,7 +17,8 @@ import {
  * 3. Resumo e confirmação
  * 4. Importação com progresso
  */
-export default function ImportTransactions({ categories, accounts, settingsApi, token, spreadsheetId, onComplete, notify }) {
+export default function ImportTransactions({ categories, accounts, settingsApi, token, spreadsheetId, onComplete }) {
+  const notify = useNotify();
   const [step, setStep] = useState("input"); // input | resolve | confirm | importing | done
   const [jsonText, setJsonText] = useState("");
   const [error, setError] = useState("");

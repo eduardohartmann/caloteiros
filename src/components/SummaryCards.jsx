@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { brl } from "../utils/formatters.js";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import Modal from "./Modal.jsx";
 
 /**
  * SummaryCards
@@ -103,33 +104,34 @@ export default function SummaryCards({ transactions, allTransactions = [], month
       </section>
 
       {showAccountModal && (
-        <div className="modal-overlay" onClick={() => setShowAccountModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Saldo por conta</h3>
-            <ul className="account-balance-list">
-              {activeAccounts.map((acc) => {
-                const balance = balanceByAccount[acc.id] || 0;
-                return (
-                  <li key={acc.id} className="account-balance-item">
-                    <span>{acc.name}</span>
-                    <strong className={balance >= 0 ? "positive" : "negative"}>
-                      {brl(balance)}
-                    </strong>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="modal-actions">
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => setShowAccountModal(false)}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
+        <Modal
+          visible={showAccountModal}
+          title="Saldo por conta"
+          onClose={() => setShowAccountModal(false)}
+          actions={
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => setShowAccountModal(false)}
+            >
+              Fechar
+            </button>
+          }
+        >
+          <ul className="account-balance-list">
+            {activeAccounts.map((acc) => {
+              const balance = balanceByAccount[acc.id] || 0;
+              return (
+                <li key={acc.id} className="account-balance-item">
+                  <span>{acc.name}</span>
+                  <strong className={balance >= 0 ? "positive" : "negative"}>
+                    {brl(balance)}
+                  </strong>
+                </li>
+              );
+            })}
+          </ul>
+        </Modal>
       )}
     </>
   );

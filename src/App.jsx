@@ -21,6 +21,9 @@ import useConfirm from "./hooks/useConfirm.js";
 import useSwipeMonth from "./hooks/useSwipeMonth.js";
 import Brand from "./components/Brand.jsx";
 import { useRef } from "react";
+import { NotifyProvider } from "./contexts/NotifyContext.jsx";
+import { ConfirmProvider } from "./contexts/ConfirmContext.jsx";
+import { SettingsProvider } from "./contexts/SettingsContext.jsx";
 
 export default function App() {
   const route = useRouter();
@@ -81,117 +84,112 @@ export default function App() {
   }[route] || "Visão geral";
 
   return (
-    <>
-      <div className="grain" />
-      <main className="app" id="app">
-        <Sidebar
-          connected={true}
-          route={route}
-          spreadsheetId={auth.spreadsheetId}
-          onNavigate={(path) => {
-            if (path === ROUTES.newTransaction) {
-              txns.setDraft({ id: "", type: "expense", description: "", amount: "", category: "", date: today(), account: "", createdAt: "", split: false });
-            }
-            navigate(path);
-          }}
-        />
-        <section className="workspace" ref={workspaceRef} id="dashboard-content" aria-label="Painel financeiro">
-          <DashboardHeader
-            name={auth.accountName}
-            title={routeTitle}
-            month={txns.month}
-            onMonthChange={txns.setMonth}
-          />
-
-          {route === ROUTES.overview && (
-            <div className="route-page">
-              <OverviewPage
-                txns={txns}
-                settings={settings}
-                onExpenseClick={() => navigate(ROUTES.categories)}
-                onIncomeClick={() => navigate(ROUTES.incomes)}
-              />
-            </div>
-          )}
-
-          {route === ROUTES.categories && (
-            <div className="route-page route-page--wide">
-              <CategoryChart
-                transactions={txns.visibleTransactions}
-                categoryMap={settings.categoryMap}
-                onEdit={txns.editTransaction}
-              />
-            </div>
-          )}
-
-          {route === ROUTES.incomes && (
-            <div className="route-page route-page--wide">
-              <IncomePage
-                transactions={txns.visibleTransactions}
-                categoryMap={settings.categoryMap}
-                onEdit={txns.editTransaction}
-              />
-            </div>
-          )}
-
-          {route === ROUTES.newTransaction && (
-            <div className="route-page route-page--form">
-              <TransactionForm
-                transaction={txns.draft}
-                editing={Boolean(txns.draft.id)}
-                onChange={txns.setDraft}
-                onSubmit={txns.saveTransaction}
-                onRemove={txns.removeTransaction}
-                onTransfer={txns.transferBetweenAccounts}
-                categories={settings.categories}
-                accounts={settings.accounts}
-                suggestions={txns.suggestions}
-                saving={txns.saving}
-                continueMode={txns.continueMode}
-                onContinueModeChange={txns.setContinueMode}
-                coupleReady={couple.coupleReady}
-                coupleEntries={couple.coupleEntries}
-              />
-            </div>
-          )}
-
-          {route === ROUTES.couple && (
-            <div className="route-page">
-              <CouplePage
-                auth={auth}
-                couple={couple}
+    <NotifyProvider notify={notify}>
+      <ConfirmProvider confirm={confirm}>
+        <SettingsProvider settings={settings}>
+          <div className="grain" />
+          <main className="app" id="app">
+            <Sidebar
+              connected={true}
+              route={route}
+              spreadsheetId={auth.spreadsheetId}
+              onNavigate={(path) => {
+                if (path === ROUTES.newTransaction) {
+                  txns.setDraft({ id: "", type: "expense", description: "", amount: "", category: "", date: today(), account: "", createdAt: "", split: false });
+                }
+                navigate(path);
+              }}
+            />
+            <section className="workspace" ref={workspaceRef} id="dashboard-content" aria-label="Painel financeiro">
+              <DashboardHeader
+                name={auth.accountName}
+                title={routeTitle}
                 month={txns.month}
-                onConfirmReimbursement={(reimbursement) => {
-                  txns.setDraft({ ...reimbursement, id: "", createdAt: "", split: false, lockType: true });
-                  navigate(ROUTES.newTransaction);
-                }}
-                onPaymentDraft={(paymentDraft) => {
-                  txns.setDraft({ ...paymentDraft, id: "", createdAt: "", split: false, lockType: true });
-                  navigate(ROUTES.newTransaction);
-                }}
+                onMonthChange={txns.setMonth}
               />
-            </div>
-          )}
 
-          {route === ROUTES.settings && (
-            <div className="route-page">
-              <SettingsRoute
-                settings={settings}
-                notify={notify}
-                onDisconnect={handleDisconnect}
-                auth={auth}
-                confirm={confirm}
-                onImportComplete={() => {
-                  // Recarrega dados após importação
-                  auth.reload && auth.reload();
-                }}
-              />
-            </div>
-          )}
-        </section>
-      </main>
-      <Toast toast={toast} />
-      <ConfirmModal {...confirmProps} />
-    </>
+              {route === ROUTES.overview && (
+                <div className="route-page">
+                  <OverviewPage
+                    txns={txns}
+                    onExpenseClick={() => navigate(ROUTES.categories)}
+                    onIncomeClick={() => navigate(ROUTES.incomes)}
+                  />
+                </div>
+              )}
+
+              {route === ROUTES.categories && (
+                <div className="route-page route-page--wide">
+                  <CategoryChart
+                    transactions={txns.visibleTransactions}
+                    onEdit={txns.editTransaction}
+                  />
+                </div>
+              )}
+
+              {route === ROUTES.incomes && (
+                <div className="route-page route-page--wide">
+                  <IncomePage
+                    transactions={txns.visibleTransactions}
+                    onEdit={txns.editTransaction}
+                  />
+                </div>
+              )}
+
+              {route === ROUTES.newTransaction && (
+                <div className="route-page route-page--form">
+                  <TransactionForm
+                    transaction={txns.draft}
+                    editing={Boolean(txns.draft.id)}
+                    onChange={txns.setDraft}
+                    onSubmit={txns.saveTransaction}
+                    onRemove={txns.removeTransaction}
+                    onTransfer={txns.transferBetweenAccounts}
+                    suggestions={txns.suggestions}
+                    saving={txns.saving}
+                    continueMode={txns.continueMode}
+                    onContinueModeChange={txns.setContinueMode}
+                    coupleReady={couple.coupleReady}
+                    coupleEntries={couple.coupleEntries}
+                  />
+                </div>
+              )}
+
+              {route === ROUTES.couple && (
+                <div className="route-page">
+                  <CouplePage
+                    auth={auth}
+                    couple={couple}
+                    month={txns.month}
+                    onConfirmReimbursement={(reimbursement) => {
+                      txns.setDraft({ ...reimbursement, id: "", createdAt: "", split: false, lockType: true });
+                      navigate(ROUTES.newTransaction);
+                    }}
+                    onPaymentDraft={(paymentDraft) => {
+                      txns.setDraft({ ...paymentDraft, id: "", createdAt: "", split: false, lockType: true });
+                      navigate(ROUTES.newTransaction);
+                    }}
+                  />
+                </div>
+              )}
+
+              {route === ROUTES.settings && (
+                <div className="route-page">
+                  <SettingsRoute
+                    onDisconnect={handleDisconnect}
+                    auth={auth}
+                    onImportComplete={() => {
+                      auth.reload && auth.reload();
+                    }}
+                  />
+                </div>
+              )}
+            </section>
+          </main>
+          <Toast toast={toast} />
+          <ConfirmModal {...confirmProps} />
+        </SettingsProvider>
+      </ConfirmProvider>
+    </NotifyProvider>
   );
 }
