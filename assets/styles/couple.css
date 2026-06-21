@@ -366,6 +366,47 @@
 .couple-row-confirmed td { opacity: .72; }
 
 /* botões de ação nos entries */
+.outline-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  font-size: .75rem;
+  font-weight: 700;
+  transition: background .12s, color .12s;
+  cursor: pointer;
+}
+
+.outline-btn:hover {
+  color: white;
+}
+
+.outline-btn--teal {
+  color: var(--teal);
+}
+
+.outline-btn--teal:hover {
+  background: var(--teal);
+}
+
+.outline-btn--green {
+  color: var(--green);
+}
+
+.outline-btn--green:hover {
+  background: var(--green);
+}
+
+.outline-btn--red {
+  color: var(--red);
+}
+
+.outline-btn--red:hover {
+  background: var(--red);
+}
+
+/* Aliases legados (mantidos para compatibilidade) */
 .couple-confirm-btn {
   min-height: 32px;
   padding: 0 12px;

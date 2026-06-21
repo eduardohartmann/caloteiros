@@ -219,7 +219,7 @@ function CoupleContent({
                 partnerName={partnerName}
                 myName={myName}
                 actions={(entry) => (
-                  <button type="button" className="couple-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
+                  <button type="button" className="outline-btn outline-btn--red" onClick={() => onDelete(entry)} disabled={loading}>
                     Excluir
                   </button>
                 )}
@@ -242,10 +242,10 @@ function CoupleContent({
                 myName={myName}
                 actions={(entry) => (
                   <span className="couple-entry-actions-group">
-                    <button type="button" className="couple-confirm-btn" onClick={() => onConfirmPayment(entry)} disabled={loading}>
+                    <button type="button" className="outline-btn outline-btn--teal" onClick={() => onConfirmPayment(entry)} disabled={loading}>
                       Confirmar recebimento
                     </button>
-                    <button type="button" className="couple-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
+                    <button type="button" className="outline-btn outline-btn--red" onClick={() => onDelete(entry)} disabled={loading}>
                       Excluir
                     </button>
                   </span>
@@ -277,7 +277,7 @@ function CoupleContent({
                 partnerName={partnerName}
                 myName={myName}
                 actions={(entry) => (
-                  <button type="button" className="couple-confirm-btn couple-pay-btn" onClick={() => onMarkAsPaid(entry)} disabled={loading}>
+                  <button type="button" className="outline-btn outline-btn--green" onClick={() => onMarkAsPaid(entry)} disabled={loading}>
                     Paguei
                   </button>
                 )}
