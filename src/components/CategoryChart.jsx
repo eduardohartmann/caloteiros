@@ -1,6 +1,9 @@
 import { useMemo } from "react";
-import { brl, dateShort } from "../utils/formatters.js";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import CategoryBarChart from "./CategoryBarChart.jsx";
+import TransactionCardList from "./TransactionCardList.jsx";
+import EmptyState from "./EmptyState.jsx";
+import PanelHeader from "./PanelHeader.jsx";
 
 export default function CategoryChart({ transactions, categoryMap, onEdit }) {
   function resolveCat(id) { return categoryMap?.[id] || id; }
@@ -10,67 +13,31 @@ export default function CategoryChart({ transactions, categoryMap, onEdit }) {
     [transactions]
   );
 
-  const grouped = expenseTransactions.reduce((result, item) => {
-    const name = resolveCat(item.category);
-    result[name] = (result[name] || 0) + item.amount;
-    return result;
-  }, {});
-  const groups = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  const largest = groups[0]?.[1] || 1;
-
   return (
     <>
-      <section className="panel spending" id="spending-panel" aria-labelledby="spending-title">
-        <div className="panel-header">
-          <div>
-            <h3 id="spending-title">Despesas por categoria</h3>
-            <p>Onde seu dinheiro foi usado</p>
-          </div>
-        </div>
-        <div className="category-chart">
-          {!groups.length && <div className="empty">Sem despesas neste período.</div>}
-          {groups.map(([category, value]) => (
-            <div className="category-row" key={category}>
-              <span>{category}</span>
-              <div className="bar"><span style={{ width: `${(value / largest) * 100}%` }} /></div>
-              <strong>{brl(value)}</strong>
-            </div>
-          ))}
-        </div>
-      </section>
+      <CategoryBarChart
+        transactions={transactions}
+        categoryMap={categoryMap}
+        type="expense"
+        title="Despesas por categoria"
+        subtitle="Onde seu dinheiro foi usado"
+        titleId="spending-title"
+        emptyMessage="Sem despesas neste período."
+      />
 
       <section className="panel transactions" aria-labelledby="expense-list-title">
-        <div className="panel-header">
-          <div>
-            <h3 id="expense-list-title">Lançamentos de despesa</h3>
-            <p>{expenseTransactions.length} {expenseTransactions.length === 1 ? "registro" : "registros"}</p>
-          </div>
-        </div>
-        <ul className="transactions-list" role="list">
-          {expenseTransactions.map((transaction) => (
-            <li
-              key={transaction.id}
-              className="transaction-card"
-              onClick={() => onEdit?.(transaction)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onEdit?.(transaction); }}
-            >
-              <div className="transaction-card__top">
-                <span className="transaction-card__description">{transaction.description}</span>
-                <span className="transaction-card__amount value expense">
-                  −{brl(transaction.amount)}
-                </span>
-              </div>
-              <div className="transaction-card__bottom">
-                <span>{dateShort(transaction.date)}</span>
-                <span className="transaction-card__sep">|</span>
-                <span className="transaction-card__category">{resolveCat(transaction.category)}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-        {!expenseTransactions.length && <div className="empty">Nenhuma despesa neste mês.</div>}
+        <PanelHeader
+          title="Lançamentos de despesa"
+          subtitle={`${expenseTransactions.length} ${expenseTransactions.length === 1 ? "registro" : "registros"}`}
+          titleId="expense-list-title"
+        />
+        <TransactionCardList
+          transactions={expenseTransactions}
+          onEdit={onEdit}
+          resolveCat={resolveCat}
+          type="expense"
+        />
+        {!expenseTransactions.length && <EmptyState message="Nenhuma despesa neste mês." />}
       </section>
     </>
   );

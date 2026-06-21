@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import useMediaQuery from "../hooks/useMediaQuery.js";
+import useClickOutside from "../hooks/useClickOutside.js";
 
 /**
  * AccountSelect
@@ -23,17 +24,12 @@ export default function AccountSelect({ options, value, onChange, allowAll = fal
 
   const selected = options.find((o) => o.id === value);
 
-  useEffect(() => {
-    if (!open || isMobile) return;
-    function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-        setSearch("");
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open, isMobile]);
+  const handleCloseDropdown = useCallback(() => {
+    setOpen(false);
+    setSearch("");
+  }, []);
+
+  useClickOutside(ref, handleCloseDropdown, open && !isMobile);
 
   // Bloqueia scroll do body quando bottom sheet está aberto
   useEffect(() => {

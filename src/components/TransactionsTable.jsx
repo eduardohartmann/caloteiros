@@ -2,6 +2,9 @@ import { useCallback, useMemo, useState } from "react";
 import { brl, dateShort } from "../utils/formatters.js";
 import useMediaQuery from "../hooks/useMediaQuery.js";
 import AccountSelect from "./AccountSelect.jsx";
+import TransactionCardList from "./TransactionCardList.jsx";
+import EmptyState from "./EmptyState.jsx";
+import PanelHeader from "./PanelHeader.jsx";
 
 export default function TransactionsTable({ transactions, onEdit, categoryMap, accountMap, accounts = [], categories = [] }) {
   const [accountFilter, setAccountFilter] = useState("");
@@ -25,55 +28,31 @@ export default function TransactionsTable({ transactions, onEdit, categoryMap, a
 
   return (
     <section className="panel transactions" id="transactions" aria-labelledby="transactions-title">
-      <div className="panel-header transactions-header">
-        <div>
-          <h3 id="transactions-title">Lançamentos</h3>
-          <p>{filtered.length} {filtered.length === 1 ? "registro" : "registros"} no período</p>
-        </div>
-        <div className="transactions-filters">
-          <AccountSelect
-            options={activeAccounts}
-            value={accountFilter}
-            onChange={setAccountFilter}
-            allowAll
-          />
-        </div>
-      </div>
+      <PanelHeader
+        title="Lançamentos"
+        subtitle={`${filtered.length} ${filtered.length === 1 ? "registro" : "registros"} no período`}
+        titleId="transactions-title"
+        actions={
+          <div className="transactions-filters">
+            <AccountSelect
+              options={activeAccounts}
+              value={accountFilter}
+              onChange={setAccountFilter}
+              allowAll
+            />
+          </div>
+        }
+      />
 
       {isMobile ? (
-        <ul className="transactions-list" role="list">
-          {filtered.map((transaction) => {
-            const catName = resolveCat(transaction.category);
-            const catDetail = categoryDetailMap[transaction.category];
-            return (
-              <li
-                key={transaction.id}
-                className="transaction-card"
-                onClick={() => onEdit(transaction)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onEdit(transaction); }}
-              >
-                <div className="transaction-card__top">
-                  <span className="transaction-card__description">{transaction.description}</span>
-                  <span className={`transaction-card__amount value ${transaction.type}`}>
-                    {transaction.type === "income" ? "+" : "−"}{brl(transaction.amount)}
-                  </span>
-                </div>
-                <div className="transaction-card__bottom">
-                  <span>{dateShort(transaction.date)}</span>
-                  <span className="transaction-card__sep">|</span>
-                  <span className="transaction-card__category">
-                    {catDetail?.icon && <span className="transaction-card__cat-icon" aria-hidden="true">{catDetail.icon}</span>}
-                    {catName}
-                  </span>
-                  <span className="transaction-card__sep">|</span>
-                  <span>{resolveAcc(transaction.account)}</span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <TransactionCardList
+          transactions={filtered}
+          onEdit={onEdit}
+          resolveCat={resolveCat}
+          resolveAcc={resolveAcc}
+          categoryDetailMap={categoryDetailMap}
+          type="mixed"
+        />
       ) : (
         <div className="table-scroll">
           <table>
@@ -99,7 +78,7 @@ export default function TransactionsTable({ transactions, onEdit, categoryMap, a
         </div>
       )}
 
-      {!filtered.length && <div className="empty">Nenhum lançamento encontrado neste mês.</div>}
+      {!filtered.length && <EmptyState message="Nenhum lançamento encontrado neste mês." />}
     </section>
   );
 }

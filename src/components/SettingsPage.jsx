@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { newId } from "../utils/formatters.js";
 import { flattenCategoryTree } from "../services/settingsSheets.js";
+import useClickOutside from "../hooks/useClickOutside.js";
 
 // ─── ActionMenu (dropdown "...") ──────────────────────────────────────────────
 
@@ -8,14 +9,8 @@ function ActionMenu({ actions, loading }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  useEffect(() => {
-    if (!open) return;
-    function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+  const handleClose = useCallback(() => setOpen(false), []);
+  useClickOutside(ref, handleClose, open);
 
   return (
     <div className="action-menu" ref={ref}>
