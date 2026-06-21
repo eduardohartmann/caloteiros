@@ -139,11 +139,213 @@
   line-height: 1.5;
 }
 
+/* ── card de saldo líquido ───────────────────────────────────────────────────── */
+.couple-balance-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border-left: 5px solid var(--line);
+}
+
+.couple-balance--positive {
+  border-left-color: var(--green);
+  background: var(--green-soft, rgba(16, 185, 129, .06));
+}
+
+.couple-balance--negative {
+  border-left-color: var(--red);
+  background: var(--red-soft, rgba(239, 68, 68, .06));
+}
+
+.couple-balance--zero {
+  border-left-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.couple-balance-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.couple-balance--positive .couple-balance-icon {
+  background: var(--green);
+  color: white;
+}
+
+.couple-balance--negative .couple-balance-icon {
+  background: var(--red);
+  color: white;
+}
+
+.couple-balance--zero .couple-balance-icon {
+  background: var(--teal);
+  color: white;
+}
+
+.couple-balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.couple-balance-label {
+  font-size: .82rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.couple-balance-amount {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
 /* resumo */
 .couple-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
   gap: 17px;
+}
+
+/* cards clicáveis */
+.couple-metric-btn {
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+  text-align: left;
+  position: relative;
+  font-family: inherit;
+  color: inherit;
+  min-height: 90px;
+  padding: 16px 18px;
+}
+
+.couple-metric-btn span {
+  margin-bottom: 8px;
+}
+
+.couple-metric-btn strong {
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  margin-bottom: 4px;
+}
+
+.couple-metric-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.couple-metric-btn:active {
+  transform: translateY(0);
+}
+
+.couple-metric--active {
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  transform: translateY(-2px);
+}
+
+.couple-metric--active::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  translate: -50% 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--line);
+}
+
+.couple-metric--receive {
+  border-color: var(--green) !important;
+}
+
+.couple-metric--receive strong {
+  color: var(--green) !important;
+}
+
+.couple-metric--owe {
+  border-color: var(--red) !important;
+}
+
+.couple-metric--owe strong {
+  color: var(--red) !important;
+}
+
+.couple-metric--confirmed {
+  border-color: var(--teal) !important;
+}
+
+.couple-metric--confirmed strong {
+  color: var(--teal) !important;
+}
+
+/* conteúdo da tab expandida */
+.couple-tab-content {
+  display: grid;
+  gap: 16px;
+  animation: coupleTabSlideIn .2s ease-out;
+}
+
+@keyframes coupleTabSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── badges de direção nas seções ────────────────────────────────────────────── */
+.couple-direction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: .7rem;
+  font-weight: 800;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.couple-badge--receive {
+  background: var(--green);
+  color: white;
+}
+
+.couple-badge--owe {
+  background: var(--red);
+  color: white;
+}
+
+.couple-badge--waiting {
+  background: var(--orange);
+  color: white;
+}
+
+.couple-badge--done {
+  background: var(--teal);
+  color: white;
+}
+
+/* seções com borda lateral colorida */
+.couple-section--receive {
+  border-left: 3px solid var(--green);
+}
+
+.couple-section--owe {
+  border-left: 3px solid var(--red);
+}
+
+.couple-section--waiting,
+.couple-section--waiting-me {
+  border-left: 3px solid var(--orange);
 }
 
 /* ações */
@@ -163,16 +365,56 @@
 
 .couple-row-confirmed td { opacity: .72; }
 
-/* botão confirmar */
+/* botões de ação nos entries */
 .couple-confirm-btn {
-  border: 0;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--teal);
+  border-radius: 8px;
   background: transparent;
   color: var(--teal);
   font-size: .75rem;
   font-weight: 700;
+  transition: background .12s, color .12s;
 }
 
-.couple-confirm-btn:hover { color: var(--teal-dark); }
+.couple-confirm-btn:hover {
+  background: var(--teal);
+  color: white;
+}
+
+.couple-pay-btn {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.couple-pay-btn:hover {
+  background: var(--green);
+  color: white;
+}
+
+.couple-delete-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--red);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--red);
+  font-size: .75rem;
+  font-weight: 700;
+  transition: background .12s, color .12s;
+}
+
+.couple-delete-btn:hover {
+  background: var(--red);
+  color: white;
+}
+
+.couple-entry-actions-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 /* divisão no formulário */
 .couple-split-section {
@@ -227,23 +469,35 @@
   font-size: .88rem;
 }
 
-/* ── entry cards (3 linhas) ──────────────────────────────────────────────────── */
+/* ── entry cards (layout simplificado) ────────────────────────────────────────── */
 .couple-entries {
   display: grid;
   gap: 0;
 }
 
 .couple-entry-card {
-  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 4px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--line);
+  transition: background .12s;
+}
+
+.couple-entry-card:hover {
+  background: var(--surface-soft);
 }
 
 .couple-entry-card:last-child {
   border-bottom: none;
 }
 
-.couple-entry-line1 {
-  margin-bottom: 4px;
+.couple-entry-row {
+  display: contents;
+}
+
+.couple-entry-row--actions {
+  padding-top: 4px;
 }
 
 .couple-entry-desc {
@@ -252,8 +506,12 @@
   color: var(--ink);
 }
 
-.couple-entry-line2 {
-  margin-bottom: 6px;
+.couple-entry-amount-main {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--ink);
+  text-align: right;
+  white-space: nowrap;
 }
 
 .couple-entry-meta {
@@ -261,36 +519,25 @@
   color: var(--muted);
 }
 
-.couple-entry-line3 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.couple-entry-values {
-  font-size: .82rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.couple-entry-arrow {
+.couple-entry-detail {
+  font-size: .72rem;
   color: var(--muted);
-  margin: 0 2px;
-}
-
-.couple-entry-due {
-  color: var(--red);
-  font-weight: 700;
+  text-align: right;
 }
 
 .couple-entry-actions {
   display: flex;
   gap: 8px;
+  justify-content: flex-end;
+  grid-column: 1 / -1;
+  padding-top: 6px;
 }
 
 /* ── responsivo ──────────────────────────────────────────────────────────────── */
 @media (max-width: 760px) {
   .couple-summary { grid-template-columns: 1fr; }
   .couple-code-box { flex-direction: column; align-items: flex-start; }
+  .couple-balance-card { padding: 16px 18px; gap: 12px; }
+  .couple-balance-amount { font-size: 1.2rem; }
+  .couple-entry-line3 { flex-direction: column; align-items: flex-start; gap: 8px; }
 }

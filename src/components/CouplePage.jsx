@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import CoupleSetup from "./CoupleSetup.jsx";
 import { brl, dateBR } from "../utils/formatters.js";
 
@@ -61,6 +61,7 @@ function CoupleContent({
 }) {
   const nameA = config.nomeA || "Usuário A";
   const nameB = config.nomeB || "Usuário B";
+  const myName = userKey === "A" ? nameA : nameB;
   const partnerName = userKey === "A" ? nameB : nameA;
 
   // Pendentes e aguardando confirmação: acumula meses anteriores (dívida não some ao trocar mês)
@@ -86,14 +87,53 @@ function CoupleContent({
     [entries, month]
   );
 
-  // Resumo
-  const totalDue = pending.reduce((s, e) => s + e.amountDue, 0);
-  const totalPaid = paid.reduce((s, e) => s + e.amountDue, 0);
-  const totalConfirmed = confirmed.reduce((s, e) => s + e.amountDue, 0);
-
   function isCreator(entry) {
     return entry.createdBy === currentUser;
   }
+
+  // Separar pendentes: "me devem" (eu cadastrei) vs "eu devo" (parceiro cadastrou)
+  const theyOweMe = useMemo(
+    () => pending.filter((e) => isCreator(e)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pending, currentUser]
+  );
+  const iOweThem = useMemo(
+    () => pending.filter((e) => !isCreator(e)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pending, currentUser]
+  );
+
+  // Separar aguardando confirmação
+  const paidTheyOweMe = useMemo(
+    () => paid.filter((e) => isCreator(e)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [paid, currentUser]
+  );
+  const paidIOweThem = useMemo(
+    () => paid.filter((e) => !isCreator(e)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [paid, currentUser]
+  );
+
+  // Saldo líquido (pendentes + aguardando): positivo = parceiro me deve, negativo = eu devo
+  const totalTheyOweMe = theyOweMe.reduce((s, e) => s + e.amountDue, 0)
+    + paidTheyOweMe.reduce((s, e) => s + e.amountDue, 0);
+  const totalIOweThem = iOweThem.reduce((s, e) => s + e.amountDue, 0)
+    + paidIOweThem.reduce((s, e) => s + e.amountDue, 0);
+  const netBalance = totalTheyOweMe - totalIOweThem;
+
+  const totalConfirmed = confirmed.reduce((s, e) => s + e.amountDue, 0);
+
+  // Tab ativa: null (nenhuma), "receive", "owe", "confirmed"
+  const [activeTab, setActiveTab] = useState(null);
+
+  function toggleTab(tab) {
+    setActiveTab((prev) => (prev === tab ? null : tab));
+  }
+
+  // Contagem para os cards
+  const receiveCount = theyOweMe.length + paidTheyOweMe.length;
+  const oweCount = iOweThem.length + paidIOweThem.length;
 
   return (
     <div className="couple-panel">
@@ -110,94 +150,186 @@ function CoupleContent({
         </div>
       )}
 
-      {/* Cards de resumo */}
-      <div className="couple-summary">
-        <article className="metric expense">
-          <span>Pendente</span>
-          <strong>{brl(totalDue)}</strong>
-          <small>{pending.length} {pending.length === 1 ? "lançamento" : "lançamentos"}</small>
-        </article>
-        <article className="metric" style={{ borderColor: "var(--orange)" }}>
-          <span>Aguardando confirmação</span>
-          <strong style={{ color: "var(--orange)" }}>{brl(totalPaid)}</strong>
-          <small>{paid.length} marcados como pagos</small>
-        </article>
-        <article className="metric balance">
-          <span>Confirmados</span>
-          <strong>{brl(totalConfirmed)}</strong>
-          <small>{confirmed.length} finalizados</small>
-        </article>
+      {/* Card de saldo líquido — sempre visível */}
+      <div className={`couple-balance-card panel ${netBalance > 0 ? "couple-balance--positive" : netBalance < 0 ? "couple-balance--negative" : "couple-balance--zero"}`}>
+        <span className="couple-balance-icon">{netBalance > 0 ? "↓" : netBalance < 0 ? "↑" : "="}</span>
+        <div className="couple-balance-info">
+          <span className="couple-balance-label">
+            {netBalance > 0
+              ? `${partnerName} deve para você`
+              : netBalance < 0
+                ? `Você deve para ${partnerName}`
+                : "Vocês estão quites"}
+          </span>
+          <strong className="couple-balance-amount">{brl(Math.abs(netBalance))}</strong>
+        </div>
       </div>
 
-      {/* Pendentes */}
-      {pending.length > 0 && (
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <h3>Pendentes</h3>
-              <p>{partnerName} deve pagar</p>
-            </div>
-          </div>
-          <EntryTable
-            entries={pending}
-            actions={(entry) => (
-              <>
-                {!isCreator(entry) && (
-                  <button type="button" className="couple-confirm-btn" onClick={() => onMarkAsPaid(entry)} disabled={loading}>
+      {/* Cards clicáveis de resumo */}
+      <div className="couple-summary">
+        <button
+          type="button"
+          className={`metric couple-metric--receive couple-metric-btn ${activeTab === "receive" ? "couple-metric--active" : ""}`}
+          onClick={() => toggleTab("receive")}
+          aria-expanded={activeTab === "receive"}
+          aria-controls="couple-tab-receive"
+        >
+          <span>Me devem</span>
+          <strong>{brl(totalTheyOweMe)}</strong>
+          <small>{receiveCount} {receiveCount === 1 ? "lançamento" : "lançamentos"}</small>
+        </button>
+        <button
+          type="button"
+          className={`metric couple-metric--owe couple-metric-btn ${activeTab === "owe" ? "couple-metric--active" : ""}`}
+          onClick={() => toggleTab("owe")}
+          aria-expanded={activeTab === "owe"}
+          aria-controls="couple-tab-owe"
+        >
+          <span>Eu devo</span>
+          <strong>{brl(totalIOweThem)}</strong>
+          <small>{oweCount} {oweCount === 1 ? "lançamento" : "lançamentos"}</small>
+        </button>
+        <button
+          type="button"
+          className={`metric couple-metric--confirmed couple-metric-btn ${activeTab === "confirmed" ? "couple-metric--active" : ""}`}
+          onClick={() => toggleTab("confirmed")}
+          aria-expanded={activeTab === "confirmed"}
+          aria-controls="couple-tab-confirmed"
+        >
+          <span>Confirmados</span>
+          <strong>{brl(totalConfirmed)}</strong>
+          <small>{confirmed.length} finalizados este mês</small>
+        </button>
+      </div>
+
+      {/* ── Conteúdo da tab "Me devem" ── */}
+      {activeTab === "receive" && (
+        <div id="couple-tab-receive" className="couple-tab-content">
+          {theyOweMe.length > 0 && (
+            <section className="panel couple-section--receive">
+              <div className="panel-header">
+                <div>
+                  <h3><span className="couple-direction-badge couple-badge--receive">↓</span> Pendentes — {partnerName} deve para você</h3>
+                  <p>{theyOweMe.length} {theyOweMe.length === 1 ? "pendência" : "pendências"} · {brl(theyOweMe.reduce((s, e) => s + e.amountDue, 0))}</p>
+                </div>
+              </div>
+              <EntryTable
+                entries={theyOweMe}
+                currentUser={currentUser}
+                partnerName={partnerName}
+                myName={myName}
+                actions={(entry) => (
+                  <button type="button" className="couple-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
+                    Excluir
+                  </button>
+                )}
+              />
+            </section>
+          )}
+
+          {paidTheyOweMe.length > 0 && (
+            <section className="panel couple-section--waiting">
+              <div className="panel-header">
+                <div>
+                  <h3><span className="couple-direction-badge couple-badge--waiting">⏳</span> {partnerName} diz que pagou — confirme</h3>
+                  <p>{paidTheyOweMe.length} aguardando sua confirmação</p>
+                </div>
+              </div>
+              <EntryTable
+                entries={paidTheyOweMe}
+                currentUser={currentUser}
+                partnerName={partnerName}
+                myName={myName}
+                actions={(entry) => (
+                  <span className="couple-entry-actions-group">
+                    <button type="button" className="couple-confirm-btn" onClick={() => onConfirmPayment(entry)} disabled={loading}>
+                      Confirmar recebimento
+                    </button>
+                    <button type="button" className="couple-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
+                      Excluir
+                    </button>
+                  </span>
+                )}
+              />
+            </section>
+          )}
+
+          {theyOweMe.length === 0 && paidTheyOweMe.length === 0 && (
+            <div className="panel"><div className="empty">Nenhuma pendência a receber.</div></div>
+          )}
+        </div>
+      )}
+
+      {/* ── Conteúdo da tab "Eu devo" ── */}
+      {activeTab === "owe" && (
+        <div id="couple-tab-owe" className="couple-tab-content">
+          {iOweThem.length > 0 && (
+            <section className="panel couple-section--owe">
+              <div className="panel-header">
+                <div>
+                  <h3><span className="couple-direction-badge couple-badge--owe">↑</span> Pendentes — Você deve para {partnerName}</h3>
+                  <p>{iOweThem.length} {iOweThem.length === 1 ? "pendência" : "pendências"} · {brl(iOweThem.reduce((s, e) => s + e.amountDue, 0))}</p>
+                </div>
+              </div>
+              <EntryTable
+                entries={iOweThem}
+                currentUser={currentUser}
+                partnerName={partnerName}
+                myName={myName}
+                actions={(entry) => (
+                  <button type="button" className="couple-confirm-btn couple-pay-btn" onClick={() => onMarkAsPaid(entry)} disabled={loading}>
                     Paguei
                   </button>
                 )}
-                {isCreator(entry) && (
-                  <button type="button" className="ghost-button settings-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
-                    Excluir
-                  </button>
-                )}
-              </>
-            )}
-          />
-        </section>
+              />
+            </section>
+          )}
+
+          {paidIOweThem.length > 0 && (
+            <section className="panel couple-section--waiting-me">
+              <div className="panel-header">
+                <div>
+                  <h3><span className="couple-direction-badge couple-badge--waiting">⏳</span> Você pagou — aguardando confirmação</h3>
+                  <p>{paidIOweThem.length} aguardando confirmação de {partnerName}</p>
+                </div>
+              </div>
+              <EntryTable
+                entries={paidIOweThem}
+                currentUser={currentUser}
+                partnerName={partnerName}
+                myName={myName}
+              />
+            </section>
+          )}
+
+          {iOweThem.length === 0 && paidIOweThem.length === 0 && (
+            <div className="panel"><div className="empty">Você não deve nada no momento.</div></div>
+          )}
+        </div>
       )}
 
-      {/* Aguardando confirmação */}
-      {paid.length > 0 && (
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <h3>Aguardando confirmação</h3>
-              <p>Parceiro marcou que pagou — confirme o recebimento</p>
-            </div>
-          </div>
-          <EntryTable
-            entries={paid}
-            actions={(entry) => (
-              <>
-                {isCreator(entry) && (
-                  <button type="button" className="couple-confirm-btn" onClick={() => onConfirmPayment(entry)} disabled={loading}>
-                    Confirmar recebimento
-                  </button>
-                )}
-                {isCreator(entry) && (
-                  <button type="button" className="ghost-button settings-delete-btn" onClick={() => onDelete(entry)} disabled={loading}>
-                    Excluir
-                  </button>
-                )}
-              </>
-            )}
-          />
-        </section>
-      )}
-
-      {/* Confirmados */}
-      {confirmed.length > 0 && (
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <h3>Confirmados</h3>
-              <p>Pagamentos finalizados neste mês</p>
-            </div>
-          </div>
-          <EntryTable entries={confirmed} />
-        </section>
+      {/* ── Conteúdo da tab "Confirmados" ── */}
+      {activeTab === "confirmed" && (
+        <div id="couple-tab-confirmed" className="couple-tab-content">
+          {confirmed.length > 0 ? (
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <h3><span className="couple-direction-badge couple-badge--done">✓</span> Confirmados</h3>
+                  <p>Pagamentos finalizados neste mês</p>
+                </div>
+              </div>
+              <EntryTable
+                entries={confirmed}
+                currentUser={currentUser}
+                partnerName={partnerName}
+                myName={myName}
+              />
+            </section>
+          ) : (
+            <div className="panel"><div className="empty">Nenhum lançamento confirmado neste mês.</div></div>
+          )}
+        </div>
       )}
 
       {pending.length === 0 && paid.length === 0 && confirmed.length === 0 && (
@@ -209,25 +341,27 @@ function CoupleContent({
   );
 }
 
-// ─── lista de entradas (layout em 3 linhas) ──────────────────────────────────
+// ─── lista de entradas (layout simplificado) ──────────────────────────────────
 
-function EntryTable({ entries, actions }) {
+function EntryTable({ entries, currentUser, partnerName, myName, actions }) {
   return (
     <div className="couple-entries">
       {entries.map((entry) => (
         <div key={entry.id} className="couple-entry-card">
-          <div className="couple-entry-line1">
+          <div className="couple-entry-row">
             <span className="couple-entry-desc">{entry.description}</span>
+            <span className="couple-entry-amount-main">{brl(entry.amountDue)}</span>
           </div>
-          <div className="couple-entry-line2">
-            <span className="couple-entry-meta">{dateBR(entry.date)} · {entry.createdBy}</span>
+          <div className="couple-entry-row">
+            <span className="couple-entry-meta">{dateBR(entry.date)}</span>
+            <span className="couple-entry-detail">Metade de {brl(entry.totalAmount)}</span>
           </div>
-          <div className="couple-entry-line3">
-            <span className="couple-entry-values">
-              {brl(entry.totalAmount)} <span className="couple-entry-arrow">→</span> <span className="couple-entry-due">{brl(entry.amountDue)}</span>
-            </span>
-            {actions && <span className="couple-entry-actions">{actions(entry)}</span>}
-          </div>
+          {actions && (
+            <div className="couple-entry-row couple-entry-row--actions">
+              <span />
+              <span className="couple-entry-actions">{actions(entry)}</span>
+            </div>
+          )}
         </div>
       ))}
     </div>
