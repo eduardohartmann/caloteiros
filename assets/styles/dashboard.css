@@ -231,6 +231,23 @@
   text-align: center;
   background: var(--surface-soft);
   border-color: var(--line);
+  border-left: 5px solid var(--line);
+}
+
+.metric.month-balance-card.month-balance--positive {
+  border-left-color: var(--green);
+}
+
+.metric.month-balance-card.month-balance--positive strong {
+  color: var(--green);
+}
+
+.metric.month-balance-card.month-balance--negative {
+  border-left-color: var(--red);
+}
+
+.metric.month-balance-card.month-balance--negative strong {
+  color: var(--red);
 }
 
 .metric.month-balance-card strong {

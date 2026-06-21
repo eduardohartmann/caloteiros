@@ -96,7 +96,7 @@ export default function SummaryCards({ transactions, allTransactions = [], month
             <strong className="expense-value">{brl(expense)}</strong>
           </div>
         </article>
-        <article className="metric month-balance-card">
+        <article className={`metric month-balance-card ${income - expense >= 0 ? "month-balance--positive" : "month-balance--negative"}`}>
           <span>Saldo do mês</span>
           <strong>{brl(income - expense)}</strong>
         </article>
