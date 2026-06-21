@@ -254,7 +254,23 @@ export async function loadCoupleSpreadsheet(token, spreadsheetId) {
     loadConfig(token, spreadsheetId),
     loadEntries(token, spreadsheetId),
   ]);
-  const userKey = localStorage.getItem(STORAGE.coupleUserKey) || "A";
+
+  // Determina userKey pelo email logado — sempre prioridade sobre localStorage
+  const currentEmail = (localStorage.getItem(STORAGE.userEmail) || "").toLowerCase().trim();
+  let userKey;
+  const emailA = (config.emailA || "").toLowerCase().trim();
+  const emailB = (config.emailB || "").toLowerCase().trim();
+
+  if (currentEmail && emailB && currentEmail === emailB) {
+    userKey = "B";
+  } else if (currentEmail && emailA && currentEmail === emailA) {
+    userKey = "A";
+  } else {
+    // Fallback: usa localStorage apenas se não conseguir resolver por email
+    userKey = localStorage.getItem(STORAGE.coupleUserKey) || "A";
+  }
+  localStorage.setItem(STORAGE.coupleUserKey, userKey);
+
   return { spreadsheetId, userKey, config, entries };
 }
 
