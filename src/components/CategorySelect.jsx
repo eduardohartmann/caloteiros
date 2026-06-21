@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import useMediaQuery from "../hooks/useMediaQuery.js";
 import useClickOutside from "../hooks/useClickOutside.js";
+import useBodyScrollLock from "../hooks/useBodyScrollLock.js";
 
 /**
  * CategorySelect
@@ -30,12 +31,7 @@ export default function CategorySelect({ options, value, onChange }) {
   useClickOutside(ref, handleCloseDropdown, open && !isMobile);
 
   // Bloqueia scroll do body quando bottom sheet está aberto
-  useEffect(() => {
-    if (open && isMobile) {
-      document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = ""; };
-    }
-  }, [open, isMobile]);
+  useBodyScrollLock(open && isMobile);
 
   const filtered = search.trim()
     ? options.filter((o) => o.name.toLowerCase().includes(search.toLowerCase()))
