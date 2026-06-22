@@ -501,6 +501,23 @@ export async function deleteLinkedTransactions(token, spreadsheetId, transaction
 }
 
 /**
+ * Insere duas transações vinculadas atomicamente numa única requisição append.
+ * Usado para criação de transferências entre contas.
+ */
+export async function appendLinkedTransactions(token, spreadsheetId, txnA, txnB, currentMonth) {
+  await request(
+    token,
+    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${SHEET_NAME}!A:L`)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    { method: "POST", body: JSON.stringify({ values: [toRow(txnA), toRow(txnB)] }) }
+  );
+
+  const allTransactions = await loadAllTransactions(token, spreadsheetId);
+  const transactions = allTransactions.filter((t) => t.date.startsWith(currentMonth));
+
+  return { spreadsheetId, transactions, allTransactions };
+}
+
+/**
  * Atualiza duas transações vinculadas atomicamente via values:batchUpdate.
  */
 export async function saveLinkedTransactions(token, spreadsheetId, txnA, currentA, txnB, currentB, currentMonth) {

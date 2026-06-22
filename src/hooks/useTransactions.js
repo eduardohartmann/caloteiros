@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { deleteSheetTransaction, deleteLinkedTransactions, saveSheetTransaction, saveLinkedTransactions } from "../services/googleSheets.js";
+import { deleteSheetTransaction, deleteLinkedTransactions, saveSheetTransaction, saveLinkedTransactions, appendLinkedTransactions } from "../services/googleSheets.js";
 import { TokenExpiredError } from "../services/sheetsApi.js";
 import { TRANSFER_CATEGORY_ID } from "../constants.js";
 import { currentRoute, navigate, ROUTES } from "../routes.js";
 import { amountFromInput, monthNow, newId, today } from "../utils/formatters.js";
+
+const DRAFT_STORAGE_KEY = "caloteiros.draft";
 
 function emptyTransaction() {
   return {
@@ -17,6 +19,32 @@ function emptyTransaction() {
     createdAt: "",
     split: false
   };
+}
+
+function loadDraftFromSession() {
+  try {
+    const saved = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    // Só restaura se tem conteúdo relevante (descrição ou valor preenchido)
+    if (parsed.description || parsed.amount) return parsed;
+  } catch { /* ignora */ }
+  return null;
+}
+
+function saveDraftToSession(draft) {
+  try {
+    // Só persiste se tem conteúdo relevante
+    if (draft.description || draft.amount) {
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } else {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+  } catch { /* ignora */ }
+}
+
+function clearDraftFromSession() {
+  try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch { /* ignora */ }
 }
 
 /**
@@ -42,9 +70,16 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
     localStorage.setItem("caloteiros.selectedMonth", newMonth);
   }
   const [search, setSearch] = useState("");
-  const [draft, setDraft] = useState(emptyTransaction);
+  const [draft, setDraftState] = useState(() => loadDraftFromSession() || emptyTransaction());
   const [previousRoute, setPreviousRoute] = useState(null);
   const [continueMode, setContinueMode] = useState(false);
+
+  // Persiste draft no sessionStorage sempre que muda
+  function setDraft(newDraft) {
+    const value = typeof newDraft === "function" ? newDraft(draft) : newDraft;
+    setDraftState(value);
+    saveDraftToSession(value);
+  }
 
   function handleError(error) {
     if (error instanceof TokenExpiredError) {
@@ -87,6 +122,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
 
   function resetForm() {
     setDraft(emptyTransaction());
+    clearDraftFromSession();
     const back = previousRoute || ROUTES.overview;
     setPreviousRoute(null);
     navigate(back);
@@ -275,6 +311,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
       const back = previousRoute || ROUTES.overview;
       setPreviousRoute(null);
       setDraft(emptyTransaction());
+      clearDraftFromSession();
       navigate(back);
       notify(linked ? "Transferência excluída." : "Lançamento excluído.");
     } catch (error) {
@@ -329,8 +366,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
 
     setSaving(true);
     try {
-      await saveSheetTransaction(token, spreadsheetId, outgoing, null, txnMonth);
-      const result = await saveSheetTransaction(token, spreadsheetId, incoming, null, txnMonth);
+      const result = await appendLinkedTransactions(token, spreadsheetId, outgoing, incoming, txnMonth);
       setTransactions(result.transactions);
       setAllTransactions(result.allTransactions || []);
       if (txnMonth !== month) changeMonth(txnMonth);
