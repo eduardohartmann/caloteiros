@@ -32,7 +32,7 @@ export default function App() {
   const auth = useAuth(notify);
   const settings = useSettings(auth);
   const couple = useCouple(auth, notify, confirm);
-  const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings);
+  const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings, () => couple.commitCoupleAction(), () => couple.cancelCoupleAction());
   const workspaceRef = useRef(null);
   useSwipeMonth(workspaceRef, txns.month, txns.setMonth);
 
@@ -94,6 +94,10 @@ export default function App() {
               route={route}
               spreadsheetId={auth.spreadsheetId}
               onNavigate={(path) => {
+                // Se está saindo do formulário sem salvar, cancela ação pendente do casal
+                if (route === ROUTES.newTransaction && path !== ROUTES.newTransaction) {
+                  couple.cancelCoupleAction();
+                }
                 if (path === ROUTES.newTransaction) {
                   txns.setDraft({ id: "", type: "expense", description: "", amount: "", category: "", date: today(), account: "", createdAt: "", split: false });
                 }

@@ -51,7 +51,7 @@ function clearDraftFromSession() {
  * useTransactions
  * Gerencia transações pessoais, filtros, formulário e sugestões de autocomplete.
  */
-export default function useTransactions(auth, notify, confirm, onSplit, settings) {
+export default function useTransactions(auth, notify, confirm, onSplit, settings, onCoupleCommit, onCoupleCancel) {
   const { token, spreadsheetId, transactionSheetId, sheetData, handleTokenExpired } = auth;
 
   const [transactions, setTransactions] = useState([]);
@@ -123,6 +123,7 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
   function resetForm() {
     setDraft(emptyTransaction());
     clearDraftFromSession();
+    if (onCoupleCancel) onCoupleCancel();
     const back = previousRoute || ROUTES.overview;
     setPreviousRoute(null);
     navigate(back);
@@ -244,6 +245,11 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
         );
         return exists ? prev : [...prev, newSuggestion];
       });
+
+      // Confirma ação pendente do casal (markAsPaid/confirmPayment) se houver
+      if (onCoupleCommit) {
+        try { await onCoupleCommit(); } catch { /* erro já tratado dentro do commitCoupleAction */ }
+      }
 
       // Modo "inserir em sequência": mantém form aberto com mesma data
       if (continueMode && !current) {
