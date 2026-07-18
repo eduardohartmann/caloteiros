@@ -20,7 +20,7 @@ import useSettings from "./hooks/useSettings.js";
 import useConfirm from "./hooks/useConfirm.js";
 import useSwipeMonth from "./hooks/useSwipeMonth.js";
 import Brand from "./components/Brand.jsx";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { NotifyProvider } from "./contexts/NotifyContext.jsx";
 import { ConfirmProvider } from "./contexts/ConfirmContext.jsx";
 import { SettingsProvider } from "./contexts/SettingsContext.jsx";
@@ -32,9 +32,21 @@ export default function App() {
   const auth = useAuth(notify);
   const settings = useSettings(auth);
   const couple = useCouple(auth, notify, confirm);
-  const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings, () => couple.commitCoupleAction(), () => couple.cancelCoupleAction());
+  const txns = useTransactions(auth, notify, confirm, (entry) => couple.addSharedEntry(entry), settings, () => couple.commitCoupleAction());
   const workspaceRef = useRef(null);
+  const prevRouteRef = useRef(route);
   useSwipeMonth(workspaceRef, txns.month, txns.setMonth);
+
+  // Bug 3 fix: cancela ação pendente do casal ao sair da rota de formulário por qualquer meio
+  // (browser back, hashchange, etc. — não apenas via Sidebar)
+  useEffect(() => {
+    if (prevRouteRef.current === ROUTES.newTransaction && route !== ROUTES.newTransaction) {
+      if (couple.pendingCoupleAction) {
+        couple.cancelCoupleAction();
+      }
+    }
+    prevRouteRef.current = route;
+  }, [route]);
 
   function handleDisconnect() {
     auth.disconnect();
@@ -94,10 +106,6 @@ export default function App() {
               route={route}
               spreadsheetId={auth.spreadsheetId}
               onNavigate={(path) => {
-                // Se está saindo do formulário sem salvar, cancela ação pendente do casal
-                if (route === ROUTES.newTransaction && path !== ROUTES.newTransaction) {
-                  couple.cancelCoupleAction();
-                }
                 if (path === ROUTES.newTransaction) {
                   txns.setDraft({ id: "", type: "expense", description: "", amount: "", category: "", date: today(), account: "", createdAt: "", split: false });
                 }

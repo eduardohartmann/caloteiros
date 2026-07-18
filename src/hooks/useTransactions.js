@@ -26,6 +26,11 @@ function loadDraftFromSession() {
     const saved = sessionStorage.getItem(DRAFT_STORAGE_KEY);
     if (!saved) return null;
     const parsed = JSON.parse(saved);
+    // Ignora drafts de ações do casal que nunca deveriam ter sido persistidos
+    if (parsed.lockType) {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      return null;
+    }
     // Só restaura se tem conteúdo relevante (descrição ou valor preenchido)
     if (parsed.description || parsed.amount) return parsed;
   } catch { /* ignora */ }
@@ -57,7 +62,7 @@ function clearDraftFromSession() {
  * useTransactions
  * Gerencia transações pessoais, filtros, formulário e sugestões de autocomplete.
  */
-export default function useTransactions(auth, notify, confirm, onSplit, settings, onCoupleCommit, onCoupleCancel) {
+export default function useTransactions(auth, notify, confirm, onSplit, settings, onCoupleCommit) {
   const { token, spreadsheetId, transactionSheetId, sheetData, handleTokenExpired } = auth;
 
   const [transactions, setTransactions] = useState([]);
@@ -129,7 +134,6 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
   function resetForm() {
     setDraft(emptyTransaction());
     clearDraftFromSession();
-    if (onCoupleCancel) onCoupleCancel();
     const back = previousRoute || ROUTES.overview;
     setPreviousRoute(null);
     navigate(back);
@@ -258,7 +262,8 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
       }
 
       // Modo "inserir em sequência": mantém form aberto com mesma data
-      if (continueMode && !current) {
+      // Não aplica continueMode para drafts do casal (lockType) — o fluxo é pontual
+      if (continueMode && !current && !transaction.lockType) {
         setDraft({ ...emptyTransaction(), date: transaction.date });
       } else {
         resetForm();
