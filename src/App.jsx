@@ -37,7 +37,7 @@ export default function App() {
   const prevRouteRef = useRef(route);
   useSwipeMonth(workspaceRef, txns.month, txns.setMonth);
 
-  // Bug 3 fix: cancela ação pendente do casal ao sair da rota de formulário por qualquer meio
+  // Cancela ação pendente do casal ao sair da rota de formulário por qualquer meio
   // (browser back, hashchange, etc. — não apenas via Sidebar)
   useEffect(() => {
     if (prevRouteRef.current === ROUTES.newTransaction && route !== ROUTES.newTransaction) {
@@ -46,6 +46,7 @@ export default function App() {
       }
     }
     prevRouteRef.current = route;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route]);
 
   function handleDisconnect() {
