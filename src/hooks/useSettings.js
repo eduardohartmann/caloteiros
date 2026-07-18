@@ -25,10 +25,11 @@ export default function useSettings(auth) {
   const categoryMap = useMemo(() => buildCategoryMap(categories), [categories]);
   const accountMap = useMemo(() => buildAccountMap(accounts), [accounts]);
 
-  // API de settings (criada sob demanda)
-  const settingsApi = token && spreadsheetId
-    ? makeSettingsApi(token, spreadsheetId, sheetIdMap)
-    : null;
+  // API de settings (memoizada para evitar recriação a cada render)
+  const settingsApi = useMemo(
+    () => token && spreadsheetId ? makeSettingsApi(token, spreadsheetId, sheetIdMap) : null,
+    [token, spreadsheetId, sheetIdMap]
+  );
 
   function reset() {
     setCategories([]);

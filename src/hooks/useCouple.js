@@ -20,6 +20,11 @@ import {
  * - Lançamentos compartilhados vêm do formulário pessoal (checkbox "Dividir")
  * - Aba Casal mostra pendentes/pagos/confirmados por mês
  * - Parceiro marca "Paguei", criador confirma e recebe receita pré-preenchida
+ *
+ * IMPORTANTE: handleMarkAsPaid e handleConfirmPayment NÃO alteram a planilha imediatamente.
+ * Elas apenas guardam a ação pendente e retornam o draft. A alteração real só acontece
+ * quando commitCoupleAction() é chamado (após salvar a transação pessoal).
+ * Se o usuário cancelar, cancelCoupleAction() limpa a ação sem efeito colateral.
  */
 export default function useCouple(auth, notify, confirm) {
   const { token, spreadsheetId, accountName, accountEmail, sheetData } = auth;
@@ -34,6 +39,10 @@ export default function useCouple(auth, notify, confirm) {
   const [coupleEntries, setCoupleEntries] = useState([]);
   const [coupleReady, setCoupleReady] = useState(false);
   const [coupleLoading, setCoupleLoading] = useState(false);
+
+  // Ação pendente do casal — só será executada após salvar a transação pessoal
+  // { type: "markAsPaid" | "confirmPayment", entry: CoupleEntry }
+  const [pendingCoupleAction, setPendingCoupleAction] = useState(null);
 
   // Restaura coupleSpreadsheetId da planilha pessoal
   useEffect(() => {
@@ -85,8 +94,12 @@ export default function useCouple(auth, notify, confirm) {
       }
       // Recarrega entradas após retry bem-sucedido
       if (pending.length > failed.length) {
-        const data = await loadCoupleSpreadsheet(token, coupleSpreadsheetId);
-        setCoupleEntries(data.entries);
+        try {
+          const data = await loadCoupleSpreadsheet(token, coupleSpreadsheetId);
+          setCoupleEntries(data.entries);
+        } catch {
+          // Falha ao recarregar não é crítica — entradas serão carregadas no próximo acesso
+        }
         if (failed.length > 0) {
           notify(`${pending.length - failed.length} lançamentos pendentes sincronizados. ${failed.length} ainda pendentes.`, true);
         }
@@ -155,57 +168,74 @@ export default function useCouple(auth, notify, confirm) {
 
   /**
    * Parceiro marca que pagou sua parte.
-   * Retorna dados para pré-preencher o formulário de despesa (pagamento da metade).
-   * O paymentTransactionId será passado depois quando o lançamento for salvo.
+   * NÃO altera a planilha ainda — apenas guarda a ação pendente e retorna o draft.
+   * A planilha só será alterada quando commitCoupleAction() for chamado.
    */
   async function handleMarkAsPaid(entry) {
+    // Guarda a ação para executar depois
+    setPendingCoupleAction({ type: "markAsPaid", entry });
+    notify("Preencha o lançamento de pagamento e salve para confirmar.");
+    // Retorna dados para pré-preencher formulário de despesa
+    return {
+      type: "expense",
+      description: `Pagamento - ${entry.description}`,
+      amount: entry.amountDue.toFixed(2).replace(".", ","),
+      category: "",
+      account: "",
+      date: new Date().toISOString().slice(0, 10)
+    };
+  }
+
+  /**
+   * Criador confirma o recebimento.
+   * NÃO altera a planilha ainda — apenas guarda a ação pendente e retorna o draft.
+   * A planilha só será alterada quando commitCoupleAction() for chamado.
+   */
+  async function handleConfirmPayment(entry) {
+    // Guarda a ação para executar depois
+    setPendingCoupleAction({ type: "confirmPayment", entry });
+    notify("Preencha o lançamento de reembolso e salve para confirmar.");
+    // Retorna dados para pré-preencher o formulário de receita
+    return {
+      type: "income",
+      description: `Reembolso - ${entry.description}`,
+      amount: entry.amountDue.toFixed(2).replace(".", ","),
+      category: "",
+      account: "",
+      date: new Date().toISOString().slice(0, 10)
+    };
+  }
+
+  /**
+   * Executa a ação pendente na planilha do casal.
+   * Chamado pelo useTransactions APÓS salvar a transação pessoal com sucesso.
+   */
+  async function commitCoupleAction() {
+    if (!pendingCoupleAction) return;
+    const { type, entry } = pendingCoupleAction;
     setCoupleLoading(true);
     try {
-      const data = await markEntryAsPaid(token, coupleSpreadsheetId, entry);
-      setCoupleEntries(data.entries);
-      notify("Marcado como pago. Preencha o lançamento de pagamento.");
-      // Retorna dados para pré-preencher formulário de despesa
-      return {
-        type: "expense",
-        description: `Pagamento - ${entry.description}`,
-        amount: entry.amountDue.toFixed(2).replace(".", ","),
-        category: "",
-        account: "",
-        date: new Date().toISOString().slice(0, 10)
-      };
+      if (type === "markAsPaid") {
+        const data = await markEntryAsPaid(token, coupleSpreadsheetId, entry);
+        setCoupleEntries(data.entries);
+      } else if (type === "confirmPayment") {
+        const data = await confirmEntryPayment(token, coupleSpreadsheetId, entry);
+        setCoupleEntries(data.entries);
+      }
     } catch (error) {
-      notify(error.message, true);
-      return null;
+      notify("Transação salva, mas houve erro ao atualizar o status no casal: " + error.message, true);
     } finally {
+      setPendingCoupleAction(null);
       setCoupleLoading(false);
     }
   }
 
   /**
-   * Criador confirma o recebimento.
-   * Retorna dados para pré-preencher o formulário de receita (reembolso).
+   * Cancela a ação pendente sem alterar nada na planilha.
+   * Chamado quando o usuário cancela/navega fora do formulário sem salvar.
    */
-  async function handleConfirmPayment(entry) {
-    setCoupleLoading(true);
-    try {
-      const data = await confirmEntryPayment(token, coupleSpreadsheetId, entry);
-      setCoupleEntries(data.entries);
-      notify("Pagamento confirmado. Preencha o lançamento de reembolso.");
-      // Retorna dados para pré-preencher o formulário de receita
-      return {
-        type: "income",
-        description: `Reembolso - ${entry.description}`,
-        amount: entry.amountDue.toFixed(2).replace(".", ","),
-        category: "",
-        account: "",
-        date: new Date().toISOString().slice(0, 10)
-      };
-    } catch (error) {
-      notify(error.message, true);
-      return null;
-    } finally {
-      setCoupleLoading(false);
-    }
+  function cancelCoupleAction() {
+    setPendingCoupleAction(null);
   }
 
   async function handleDeleteEntry(entry) {
@@ -233,8 +263,10 @@ export default function useCouple(auth, notify, confirm) {
     coupleSpreadsheetId, coupleUserKey, coupleConfig,
     coupleEntries,
     coupleReady, coupleLoading,
+    pendingCoupleAction,
     handleCreateCouple, handleJoinCouple,
     addSharedEntry, handleMarkAsPaid, handleConfirmPayment, handleDeleteEntry,
+    commitCoupleAction, cancelCoupleAction,
     reset
   };
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 /**
  * useConfirm
@@ -15,23 +15,32 @@ export default function useConfirm() {
   const [state, setState] = useState({
     visible: false,
     title: "",
-    message: "",
-    resolve: null
+    message: ""
   });
 
+  const resolveRef = useRef(null);
+
   const confirm = useCallback((message, title = "Confirmar") => {
+    // Se já existe um confirm pendente, resolve com false (cancelado implicitamente)
+    if (resolveRef.current) {
+      resolveRef.current(false);
+      resolveRef.current = null;
+    }
     return new Promise((resolve) => {
-      setState({ visible: true, title, message, resolve });
+      resolveRef.current = resolve;
+      setState({ visible: true, title, message });
     });
   }, []);
 
   function handleConfirm() {
-    state.resolve?.(true);
+    resolveRef.current?.(true);
+    resolveRef.current = null;
     setState((s) => ({ ...s, visible: false }));
   }
 
   function handleCancel() {
-    state.resolve?.(false);
+    resolveRef.current?.(false);
+    resolveRef.current = null;
     setState((s) => ({ ...s, visible: false }));
   }
 

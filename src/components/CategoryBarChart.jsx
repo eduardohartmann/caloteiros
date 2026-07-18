@@ -5,16 +5,6 @@ import { TRANSFER_CATEGORY_ID } from "../constants.js";
 /**
  * CategoryBarChart
  * Gráfico de barras agrupado por categoria (top 5).
- *
- * Props:
- * - transactions: array de transações já filtradas pelo mês
- * - categoryMap: { [id]: nome }
- * - type: "expense" | "income" — filtra por tipo
- * - title: string
- * - subtitle: string
- * - titleId: string (para aria)
- * - barClass: string (opcional, ex: "bar--income")
- * - emptyMessage: string
  */
 export default function CategoryBarChart({
   transactions,
@@ -33,13 +23,15 @@ export default function CategoryBarChart({
     [transactions, type]
   );
 
-  const grouped = filtered.reduce((result, item) => {
-    const name = resolveCat(item.category);
-    result[name] = (result[name] || 0) + item.amount;
-    return result;
-  }, {});
+  const groups = useMemo(() => {
+    const grouped = filtered.reduce((result, item) => {
+      const name = resolveCat(item.category);
+      result[name] = (result[name] || 0) + item.amount;
+      return result;
+    }, {});
+    return Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [filtered, categoryMap]);
 
-  const groups = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const largest = groups[0]?.[1] || 1;
 
   return (

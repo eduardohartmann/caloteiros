@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { STORAGE } from "../constants.js";
 import { ensureSpreadsheet, loadGoogleProfile } from "../services/googleSheets.js";
 import { extractTokenFromUrl, redirectToGoogle, revokeToken } from "../services/auth.js";
@@ -50,10 +50,12 @@ export default function useAuth(notify) {
   const [sheetIdMap, setSheetIdMap] = useState({});
   const [sheetData, setSheetData] = useState(null);
 
+  const initRef = useRef(false);
+
   // ── inicialização ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (useAuth._loading) return;
-    useAuth._loading = true;
+    if (initRef.current) return;
+    initRef.current = true;
 
     const tokenFromUrl = extractTokenFromUrl();
     if (tokenFromUrl) {
@@ -70,7 +72,6 @@ export default function useAuth(notify) {
 
     // Sem token — mostra tela de login
     setLoading(false);
-    useAuth._loading = false;
 
     async function doLoad(accessToken) {
       try {
@@ -91,8 +92,6 @@ export default function useAuth(notify) {
         localStorage.removeItem(STORAGE.sheetId);
         setLoading(false);
         notify(err.message || "Falha ao conectar.", true);
-      } finally {
-        useAuth._loading = false;
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,4 +147,3 @@ export default function useAuth(notify) {
     connectGoogle, disconnect, handleTokenExpired
   };
 }
-useAuth._loading = false;

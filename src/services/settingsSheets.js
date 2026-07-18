@@ -118,6 +118,28 @@ export async function loadAccounts(requestFn, spreadsheetId) {
   }
 }
 
+// ─── helpers: buscar rowNumber atualizado pelo ID ────────────────────────────
+
+async function findCategoryRowNumber(requestFn, spreadsheetId, categoryId) {
+  const result = await requestFn(
+    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${CATEGORIES_SHEET}!A2:A`)}`
+  );
+  const ids = result.values || [];
+  const index = ids.findIndex((row) => row[0] === categoryId);
+  if (index === -1) throw new Error("Categoria não encontrada na planilha.");
+  return index + 2;
+}
+
+async function findAccountRowNumber(requestFn, spreadsheetId, accountId) {
+  const result = await requestFn(
+    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${ACCOUNTS_SHEET}!A2:A`)}`
+  );
+  const ids = result.values || [];
+  const index = ids.findIndex((row) => row[0] === accountId);
+  if (index === -1) throw new Error("Conta não encontrada na planilha.");
+  return index + 2;
+}
+
 // ─── seed inicial ─────────────────────────────────────────────────────────────
 
 export async function seedCategoriesAndAccounts(updateValuesFn, spreadsheetId) {
@@ -143,10 +165,11 @@ export async function seedCategoriesAndAccounts(updateValuesFn, spreadsheetId) {
 
 export async function saveCategory(requestFn, updateValuesFn, spreadsheetId, category, existing) {
   if (existing) {
-    // atualiza linha existente
+    // Busca rowNumber atualizado para proteger contra stale data
+    const freshRow = await findCategoryRowNumber(requestFn, spreadsheetId, existing.id);
     await updateValuesFn(
       spreadsheetId,
-      `${CATEGORIES_SHEET}!A${existing.rowNumber}:H${existing.rowNumber}`,
+      `${CATEGORIES_SHEET}!A${freshRow}:H${freshRow}`,
       [categoryToRow({ ...category, createdAt: existing.createdAt })]
     );
   } else {
@@ -159,17 +182,21 @@ export async function saveCategory(requestFn, updateValuesFn, spreadsheetId, cat
   return loadCategories(requestFn, spreadsheetId);
 }
 
-export async function toggleCategory(updateValuesFn, spreadsheetId, category) {
+export async function toggleCategory(requestFn, updateValuesFn, spreadsheetId, category) {
+  // Busca rowNumber atualizado para proteger contra stale data
+  const freshRow = await findCategoryRowNumber(requestFn, spreadsheetId, category.id);
   const updated = { ...category, active: !category.active };
   await updateValuesFn(
     spreadsheetId,
-    `${CATEGORIES_SHEET}!A${category.rowNumber}:H${category.rowNumber}`,
+    `${CATEGORIES_SHEET}!A${freshRow}:H${freshRow}`,
     [categoryToRow(updated)]
   );
   return updated;
 }
 
 export async function deleteCategory(requestFn, spreadsheetId, category, sheetIdMap) {
+  // Busca rowNumber atualizado para proteger contra stale data
+  const freshRow = await findCategoryRowNumber(requestFn, spreadsheetId, category.id);
   const sheetId = sheetIdMap[CATEGORIES_SHEET];
   await requestFn(`spreadsheets/${spreadsheetId}:batchUpdate`, {
     method: "POST",
@@ -179,8 +206,8 @@ export async function deleteCategory(requestFn, spreadsheetId, category, sheetId
           range: {
             sheetId,
             dimension: "ROWS",
-            startIndex: category.rowNumber - 1,
-            endIndex: category.rowNumber
+            startIndex: freshRow - 1,
+            endIndex: freshRow
           }
         }
       }]
@@ -193,9 +220,11 @@ export async function deleteCategory(requestFn, spreadsheetId, category, sheetId
 
 export async function saveAccount(requestFn, updateValuesFn, spreadsheetId, account, existing) {
   if (existing) {
+    // Busca rowNumber atualizado para proteger contra stale data
+    const freshRow = await findAccountRowNumber(requestFn, spreadsheetId, existing.id);
     await updateValuesFn(
       spreadsheetId,
-      `${ACCOUNTS_SHEET}!A${existing.rowNumber}:E${existing.rowNumber}`,
+      `${ACCOUNTS_SHEET}!A${freshRow}:E${freshRow}`,
       [accountToRow({ ...account, createdAt: existing.createdAt })]
     );
   } else {
@@ -207,17 +236,21 @@ export async function saveAccount(requestFn, updateValuesFn, spreadsheetId, acco
   return loadAccounts(requestFn, spreadsheetId);
 }
 
-export async function toggleAccount(updateValuesFn, spreadsheetId, account) {
+export async function toggleAccount(requestFn, updateValuesFn, spreadsheetId, account) {
+  // Busca rowNumber atualizado para proteger contra stale data
+  const freshRow = await findAccountRowNumber(requestFn, spreadsheetId, account.id);
   const updated = { ...account, active: !account.active };
   await updateValuesFn(
     spreadsheetId,
-    `${ACCOUNTS_SHEET}!A${account.rowNumber}:E${account.rowNumber}`,
+    `${ACCOUNTS_SHEET}!A${freshRow}:E${freshRow}`,
     [accountToRow(updated)]
   );
   return updated;
 }
 
 export async function deleteAccount(requestFn, spreadsheetId, account, sheetIdMap) {
+  // Busca rowNumber atualizado para proteger contra stale data
+  const freshRow = await findAccountRowNumber(requestFn, spreadsheetId, account.id);
   const sheetId = sheetIdMap[ACCOUNTS_SHEET];
   await requestFn(`spreadsheets/${spreadsheetId}:batchUpdate`, {
     method: "POST",
@@ -227,8 +260,8 @@ export async function deleteAccount(requestFn, spreadsheetId, account, sheetIdMa
           range: {
             sheetId,
             dimension: "ROWS",
-            startIndex: account.rowNumber - 1,
-            endIndex: account.rowNumber
+            startIndex: freshRow - 1,
+            endIndex: freshRow
           }
         }
       }]
