@@ -34,6 +34,12 @@ function loadDraftFromSession() {
 
 function saveDraftToSession(draft) {
   try {
+    // Não persiste drafts de ações do casal (pagamento/reembolso)
+    // pois o pendingCoupleAction não sobrevive ao reload
+    if (draft.lockType) {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      return;
+    }
     // Só persiste se tem conteúdo relevante
     if (draft.description || draft.amount) {
       sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
