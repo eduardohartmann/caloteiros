@@ -89,6 +89,7 @@ export function buildSuggestions(allTransactions, accounts) {
     ? new Set(accounts.filter((a) => a.active).map((a) => a.id))
     : null;
 
+  const MAX_SUGGESTIONS = 500;
   const map = new Map();
   // Itera do mais recente para o mais antigo para manter a ordem de recência
   for (let i = allTransactions.length - 1; i >= 0; i--) {
@@ -105,6 +106,7 @@ export function buildSuggestions(allTransactions, accounts) {
         category: t.category,
         account: t.account
       });
+      if (map.size >= MAX_SUGGESTIONS) break;
     }
   }
   return Array.from(map.values());
@@ -350,10 +352,10 @@ export function makeSettingsApi(token, spreadsheetId, sheetIdMap = {}) {
     loadCategories:   () => loadCategories(client.request, spreadsheetId),
     loadAccounts:     () => loadAccounts(client.request, spreadsheetId),
     saveCategory:     (cat, existing) => saveCategory(client.request, client.updateValues, spreadsheetId, cat, existing),
-    toggleCategory:   (cat) => toggleCategory(client.updateValues, spreadsheetId, cat),
+    toggleCategory:   (cat) => toggleCategory(client.request, client.updateValues, spreadsheetId, cat),
     deleteCategory:   (cat) => deleteCategory(client.request, spreadsheetId, cat, sheetIdMap),
     saveAccount:      (acc, existing) => saveAccount(client.request, client.updateValues, spreadsheetId, acc, existing),
-    toggleAccount:    (acc) => toggleAccount(client.updateValues, spreadsheetId, acc),
+    toggleAccount:    (acc) => toggleAccount(client.request, client.updateValues, spreadsheetId, acc),
     deleteAccount:    (acc) => deleteAccount(client.request, spreadsheetId, acc, sheetIdMap),
     importCategories: (data) => importCategories(client.request, client.updateValues, spreadsheetId, data),
     importAccounts:   (data) => importAccounts(client.request, client.updateValues, spreadsheetId, data)

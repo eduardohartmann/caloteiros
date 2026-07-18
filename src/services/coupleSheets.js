@@ -209,13 +209,19 @@ export async function joinCoupleSpreadsheet(token, spreadsheetId, nameB, emailB)
   if (!hasSheet) throw new Error("Planilha inválida. Verifique o código e tente novamente.");
 
   const config = await loadConfig(token, spreadsheetId);
+
+  // Protege contra overwrite: só grava se os dados de A estão presentes
+  if (!config.nomeA && !config.emailA) {
+    throw new Error("Planilha do casal corrompida: dados do criador não encontrados.");
+  }
+
   await updateValues(token, spreadsheetId, `${SETTINGS_SHEET}!A1:B6`, [
     ["chave", "valor"],
-    ["nomeA", config.nomeA || ""],
-    ["emailA", config.emailA || ""],
+    ["nomeA", config.nomeA],
+    ["emailA", config.emailA],
     ["nomeB", nameB],
     ["emailB", emailB],
-    ["versao", "2"]
+    ["versao", config.versao || "2"]
   ]);
 
   localStorage.setItem(STORAGE.coupleSheetId, spreadsheetId);

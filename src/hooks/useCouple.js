@@ -94,8 +94,12 @@ export default function useCouple(auth, notify, confirm) {
       }
       // Recarrega entradas após retry bem-sucedido
       if (pending.length > failed.length) {
-        const data = await loadCoupleSpreadsheet(token, coupleSpreadsheetId);
-        setCoupleEntries(data.entries);
+        try {
+          const data = await loadCoupleSpreadsheet(token, coupleSpreadsheetId);
+          setCoupleEntries(data.entries);
+        } catch {
+          // Falha ao recarregar não é crítica — entradas serão carregadas no próximo acesso
+        }
         if (failed.length > 0) {
           notify(`${pending.length - failed.length} lançamentos pendentes sincronizados. ${failed.length} ainda pendentes.`, true);
         }
