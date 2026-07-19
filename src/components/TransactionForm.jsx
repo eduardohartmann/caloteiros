@@ -110,7 +110,7 @@ export default function TransactionForm({
     onChange({
       ...transaction,
       description: suggestion.description,
-      type: suggestion.type,
+      type: typeLocked ? transaction.type : suggestion.type,
       category: suggestion.category,
       account: suggestion.account
     });
