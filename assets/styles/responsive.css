@@ -226,11 +226,6 @@
   /* ── formulário ── */
   .form-row { grid-template-columns: 1fr; }
 
-  /* ── selects: impede zoom ao focar no input de busca ── */
-  .category-select-search input {
-    font-size: 16px;
-  }
-
   /* ── tabela de lançamentos ── */
   .transactions-header {
     align-items: flex-start;
@@ -266,4 +261,24 @@
   .menu button { padding: 0; }
   .cards { grid-template-columns: 1fr; }
   .metric.balance { grid-column: auto; }
+}
+
+/* ─── iOS Safari: impede o zoom automático ao focar em campos ─────────────────
+   O Safari no iOS dá zoom na tela quando um campo tem font-size < 16px.
+   Em dispositivos de toque, garantimos no mínimo 16px nos campos de
+   preenchimento, sem afetar a tipografia no desktop. */
+@media (hover: none) and (pointer: coarse) {
+  input,
+  select,
+  textarea,
+  form input:not([type="radio"]):not([type="checkbox"]),
+  form select,
+  .search input,
+  .month-select input,
+  .sheet-search input,
+  .category-select-search input,
+  .settings-import-textarea,
+  .couple-split-input {
+    font-size: 16px;
+  }
 }
