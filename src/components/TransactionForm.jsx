@@ -4,10 +4,10 @@ import { createResolvers } from "../utils/resolvers.js";
 import { maskCurrency } from "../utils/formatters.js";
 import { TRANSFER_CATEGORY_ID, storageKey } from "../constants.js";
 import { useSettingsContext } from "../contexts/SettingsContext.jsx";
-
-const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 import CategorySelect from "./CategorySelect.jsx";
 import AccountSelect from "./AccountSelect.jsx";
+
+const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 
 /**
  * TransactionForm

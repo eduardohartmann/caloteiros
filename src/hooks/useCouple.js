@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { STORAGE, storageKey } from "../constants.js";
-
-const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 import { saveSetting } from "../services/googleSheets.js";
 import {
   confirmEntryPayment,
@@ -13,6 +11,8 @@ import {
   saveCoupleEntry,
   shareCoupleWithPartner
 } from "../services/coupleSheets.js";
+
+const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 
 /**
  * useCouple
