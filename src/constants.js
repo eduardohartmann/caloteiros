@@ -4,15 +4,25 @@ export const CATEGORIES_SHEET = "Categorias";
 export const ACCOUNTS_SHEET = "Contas";
 export const COUPLE_SHEET_NAME = "Divisao";
 
+// Prefixo de todas as chaves de localStorage. No preview (/caloteiros/dev/)
+// vira "caloteiros.dev." para isolar o estado do app de produção.
+const BASE = (typeof import.meta !== "undefined" && import.meta.env?.BASE_URL) || "/";
+const STORAGE_PREFIX = BASE.includes("/dev/") ? "caloteiros.dev." : "caloteiros.";
+
+/** Monta uma chave de localStorage com o prefixo do ambiente atual. */
+export function storageKey(name) {
+  return STORAGE_PREFIX + name;
+}
+
 export const STORAGE = {
-  sheetId: "caloteiros.spreadsheetId",
-  folderId: "caloteiros.folderId",
-  coupleSheetId: "caloteiros.coupleSpreadsheetId",
-  coupleUserKey: "caloteiros.coupleUserKey",
-  userName: "caloteiros.userName",
-  userEmail: "caloteiros.userEmail",
-  token: "caloteiros.token",
-  tokenExpiry: "caloteiros.tokenExpiry"
+  sheetId: storageKey("spreadsheetId"),
+  folderId: storageKey("folderId"),
+  coupleSheetId: storageKey("coupleSpreadsheetId"),
+  coupleUserKey: storageKey("coupleUserKey"),
+  userName: storageKey("userName"),
+  userEmail: storageKey("userEmail"),
+  token: storageKey("token"),
+  tokenExpiry: storageKey("tokenExpiry")
 };
 
 export const GOOGLE_SCOPE =

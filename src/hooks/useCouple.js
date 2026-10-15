@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { STORAGE } from "../constants.js";
+import { STORAGE, storageKey } from "../constants.js";
+
+const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 import { saveSetting } from "../services/googleSheets.js";
 import {
   confirmEntryPayment,
@@ -75,7 +77,7 @@ export default function useCouple(auth, notify, confirm) {
   // #2 - Retry de splits pendentes ao carregar
   useEffect(() => {
     if (!coupleReady || !coupleSpreadsheetId || !token) return;
-    const pending = JSON.parse(localStorage.getItem("caloteiros.pendingSplits") || "[]");
+    const pending = JSON.parse(localStorage.getItem(PENDING_SPLITS_KEY) || "[]");
     if (pending.length === 0) return;
 
     (async () => {
@@ -88,9 +90,9 @@ export default function useCouple(auth, notify, confirm) {
         }
       }
       if (failed.length > 0) {
-        localStorage.setItem("caloteiros.pendingSplits", JSON.stringify(failed));
+        localStorage.setItem(PENDING_SPLITS_KEY, JSON.stringify(failed));
       } else {
-        localStorage.removeItem("caloteiros.pendingSplits");
+        localStorage.removeItem(PENDING_SPLITS_KEY);
       }
       // Recarrega entradas após retry bem-sucedido
       if (pending.length > failed.length) {

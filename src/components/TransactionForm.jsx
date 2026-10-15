@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { flattenCategoryTree } from "../services/settingsSheets.js";
 import { createResolvers } from "../utils/resolvers.js";
 import { maskCurrency } from "../utils/formatters.js";
-import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import { TRANSFER_CATEGORY_ID, storageKey } from "../constants.js";
 import { useSettingsContext } from "../contexts/SettingsContext.jsx";
+
+const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 import CategorySelect from "./CategorySelect.jsx";
 import AccountSelect from "./AccountSelect.jsx";
 
@@ -44,7 +46,7 @@ export default function TransactionForm({
     if (coupleEntries.some((e) => e.sourceTransactionId === transaction.id)) return true;
     // Checa na fila de retry (pendingSplits no localStorage)
     try {
-      const pending = JSON.parse(localStorage.getItem("caloteiros.pendingSplits") || "[]");
+      const pending = JSON.parse(localStorage.getItem(PENDING_SPLITS_KEY) || "[]");
       if (pending.some((e) => e.sourceTransactionId === transaction.id)) return true;
     } catch { /* ignora */ }
     return false;

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { deleteSheetTransaction, deleteLinkedTransactions, saveSheetTransaction, saveLinkedTransactions, appendLinkedTransactions } from "../services/googleSheets.js";
 import { TokenExpiredError } from "../services/sheetsApi.js";
-import { TRANSFER_CATEGORY_ID } from "../constants.js";
+import { TRANSFER_CATEGORY_ID, storageKey } from "../constants.js";
 import { currentRoute, navigate, ROUTES } from "../routes.js";
 import { amountFromInput, monthNow, newId, today } from "../utils/formatters.js";
 
-const DRAFT_STORAGE_KEY = "caloteiros.draft";
+const DRAFT_STORAGE_KEY = storageKey("draft");
+const SELECTED_MONTH_KEY = storageKey("selectedMonth");
+const PENDING_SPLITS_KEY = storageKey("pendingSplits");
 
 function emptyTransaction() {
   return {
@@ -73,12 +75,12 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
 
   // #6 - Restaurar mês selecionado do localStorage
   const [month, setMonth] = useState(() => {
-    return localStorage.getItem("caloteiros.selectedMonth") || monthNow();
+    return localStorage.getItem(SELECTED_MONTH_KEY) || monthNow();
   });
 
   function changeMonth(newMonth) {
     setMonth(newMonth);
-    localStorage.setItem("caloteiros.selectedMonth", newMonth);
+    localStorage.setItem(SELECTED_MONTH_KEY, newMonth);
   }
   const [search, setSearch] = useState("");
   const [draft, setDraftState] = useState(() => loadDraftFromSession() || emptyTransaction());
@@ -235,9 +237,9 @@ export default function useTransactions(auth, notify, confirm, onSplit, settings
             true
           );
           // Salva em localStorage para retry posterior
-          const pending = JSON.parse(localStorage.getItem("caloteiros.pendingSplits") || "[]");
+          const pending = JSON.parse(localStorage.getItem(PENDING_SPLITS_KEY) || "[]");
           pending.push(coupleEntry);
-          localStorage.setItem("caloteiros.pendingSplits", JSON.stringify(pending));
+          localStorage.setItem(PENDING_SPLITS_KEY, JSON.stringify(pending));
         }
       }
 
