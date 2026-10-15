@@ -2,8 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+// base: /caloteiros/ (prod) ou /caloteiros/dev/ (preview), via DEPLOY_BASE no CI.
+const base = process.env.DEPLOY_BASE || "/caloteiros/";
+const isDev = base === "/caloteiros/dev/";
+
 export default defineConfig({
-  base: "/caloteiros/",
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -26,13 +30,13 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: "Caloteiros",
-        short_name: "Caloteiros",
+        name: isDev ? "Caloteiros DEV" : "Caloteiros",
+        short_name: isDev ? "Caloteiros DEV" : "Caloteiros",
         description: "Controle financeiro pessoal com dados no Google Sheets.",
         start_url: "./",
         display: "standalone",
         background_color: "#f5f7f3",
-        theme_color: "#0f766e",
+        theme_color: isDev ? "#b45309" : "#0f766e",
         lang: "pt-BR",
         icons: [
           {
