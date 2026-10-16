@@ -1,12 +1,14 @@
 /* Dashboard: navegacao, resumo, grafico, formulario e lancamentos. */
 .app {
   min-height: 100vh;
+  min-height: 100dvh; /* altura real da viewport no Safari iOS (sem sobra) */
   display: flex;
 }
 
 .sidebar {
   width: 256px;
   min-height: 100vh;
+  min-height: 100dvh;
   position: sticky;
   top: 0;
   padding: 27px 21px;

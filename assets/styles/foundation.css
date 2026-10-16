@@ -19,6 +19,13 @@
 
 * { box-sizing: border-box; }
 
+html, body {
+  height: 100%;
+  /* Evita o "rubber-band"/bounce do Safari iOS (scroll elástico em páginas
+     que não precisam rolar). */
+  overscroll-behavior: none;
+}
+
 html {
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--ink);
@@ -28,6 +35,10 @@ html {
 body {
   margin: 0;
   min-width: 300px;
+}
+
+#root {
+  min-height: 100%;
 }
 
 button, input, select { font: inherit; }
