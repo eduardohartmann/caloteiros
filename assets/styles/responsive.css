@@ -212,9 +212,10 @@
     min-height: auto;
   }
 
+  /* Saldo total enxuto: sem min-height fixo, padding reduzido (Opção A) */
   .metric {
-    min-height: 100px;
-    padding: 18px 18px;
+    min-height: auto;
+    padding: 14px 18px;
   }
 
   .metric strong {
