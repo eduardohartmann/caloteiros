@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { STORAGE } from "../constants.js";
 import { ensureSpreadsheet, loadGoogleProfile } from "../services/googleSheets.js";
-import { extractTokenFromUrl, redirectToGoogle, revokeToken } from "../services/auth.js";
+import { connectGoogle as gisConnect, refreshToken as gisRefresh, revokeToken } from "../services/auth.js";
 import { TokenExpiredError } from "../services/sheetsApi.js";
 import { navigate, ROUTES } from "../routes.js";
 import { monthNow } from "../utils/formatters.js";
@@ -30,7 +30,8 @@ function clearToken() {
 
 /**
  * useAuth
- * Gerencia autenticação via redirect OAuth com persistência do token.
+ * Gerencia autenticação via Google Identity Services (GIS) token model,
+ * com persistência do token e renovação silenciosa em background.
  * Sem modo demo — sempre requer Google.
  */
 export default function useAuth(notify) {
@@ -57,45 +58,59 @@ export default function useAuth(notify) {
     if (initRef.current) return;
     initRef.current = true;
 
-    const tokenFromUrl = extractTokenFromUrl();
-    if (tokenFromUrl) {
-      saveToken(tokenFromUrl);
-      doLoad(tokenFromUrl);
-      return;
-    }
-
+    const hasSheet = Boolean(localStorage.getItem(STORAGE.sheetId));
     const savedToken = getSavedToken();
-    if (savedToken && localStorage.getItem(STORAGE.sheetId)) {
-      doLoad(savedToken);
+
+    if (savedToken && hasSheet) {
+      // Token ainda válido em cache → carrega direto.
+      loadWithToken(savedToken);
       return;
     }
 
-    // Sem token — mostra tela de login
-    setLoading(false);
-
-    async function doLoad(accessToken) {
-      try {
-        const savedSheetId = localStorage.getItem(STORAGE.sheetId) || "";
-        const [profile, data] = await Promise.all([
-          loadGoogleProfile(accessToken),
-          ensureSpreadsheet(accessToken, savedSheetId, monthNow())
-        ]);
-        applyAuth(accessToken, profile, data);
-        // Só navega para overview se não está numa rota válida do dashboard
-        const current = window.location.hash.replace(/^#/, "");
-        const validRoutes = Object.values(ROUTES);
-        if (!current || !validRoutes.includes(current)) {
-          navigate(ROUTES.overview, true);
+    if (hasSheet) {
+      // Já conectou antes (tem planilha), mas o token expirou.
+      // Tenta renovar silenciosamente, sem popup, via sessão ativa do Google.
+      gisRefresh((err, result) => {
+        if (err || !result) {
+          setLoading(false); // renovação silenciosa falhou → mostra login
+          return;
         }
-      } catch (err) {
-        clearToken();
-        localStorage.removeItem(STORAGE.sheetId);
-        setLoading(false);
-        notify(err.message || "Falha ao conectar.", true);
-      }
+        saveToken(result.accessToken, result.expiresIn);
+        loadWithToken(result.accessToken);
+      });
+      return;
     }
+
+    // Primeira vez — mostra tela de login
+    setLoading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   * Carrega perfil + planilha com um access token já válido e aplica o estado
+   * de autenticação. Em caso de falha, limpa o token e volta para o login.
+   */
+  async function loadWithToken(accessToken) {
+    try {
+      const savedSheetId = localStorage.getItem(STORAGE.sheetId) || "";
+      const [profile, data] = await Promise.all([
+        loadGoogleProfile(accessToken),
+        ensureSpreadsheet(accessToken, savedSheetId, monthNow())
+      ]);
+      applyAuth(accessToken, profile, data);
+      // Só navega para overview se não está numa rota válida do dashboard
+      const current = window.location.hash.replace(/^#/, "");
+      const validRoutes = Object.values(ROUTES);
+      if (!current || !validRoutes.includes(current)) {
+        navigate(ROUTES.overview, true);
+      }
+    } catch (err) {
+      clearToken();
+      localStorage.removeItem(STORAGE.sheetId);
+      setLoading(false);
+      notify(err.message || "Falha ao conectar.", true);
+    }
+  }
 
   function applyAuth(newToken, profile, data) {
     const name = profile?.given_name || "você";
@@ -115,8 +130,18 @@ export default function useAuth(notify) {
 
   function connectGoogle() {
     try {
-      redirectToGoogle();
+      setLoading(true);
+      gisConnect((err, result) => {
+        if (err || !result) {
+          setLoading(false);
+          notify(err?.message || "Falha ao conectar.", true);
+          return;
+        }
+        saveToken(result.accessToken, result.expiresIn);
+        loadWithToken(result.accessToken);
+      });
     } catch (err) {
+      setLoading(false);
       notify(err.message, true);
     }
   }
@@ -136,8 +161,18 @@ export default function useAuth(notify) {
 
   function handleTokenExpired() {
     clearToken();
-    notify("Sessão expirada. Reconectando…", true);
-    setTimeout(() => redirectToGoogle(), 800);
+    // Tenta renovar sem interromper o usuário (renovação silenciosa).
+    gisRefresh((err, result) => {
+      if (err || !result) {
+        // Sessão do Google não está mais ativa → precisa reautenticar.
+        setToken("");
+        setAuthenticated(false);
+        notify("Sessão expirada. Conecte-se novamente.", true);
+        return;
+      }
+      saveToken(result.accessToken, result.expiresIn);
+      setToken(result.accessToken);
+    });
   }
 
   return {

@@ -1,82 +1,114 @@
 /**
  * auth.js
- * Autenticação OAuth2 via redirect (sem popup).
+ * Autenticação OAuth2 via Google Identity Services (GIS) — token model.
+ *
+ * Substitui o antigo fluxo implícito via redirect. Agora o login acontece
+ * em um popup oficial do Google (sem recarregar a página) e a renovação do
+ * token é feita silenciosamente em background enquanto a sessão Google existir.
  *
  * Fluxo:
- * 1. connectGoogle() → redireciona para accounts.google.com
- * 2. Google redireciona de volta com access_token no hash da URL
- * 3. extractTokenFromUrl() → lê o token do hash e limpa a URL
+ * 1. connectGoogle(cb) → abre o popup de consentimento e devolve o token no callback
+ * 2. refreshToken(cb)  → tenta renovar sem UI (prompt: "") quando o token expira
+ * 3. revokeToken()     → revoga o access token (logout)
  *
- * Funciona em qualquer browser, PWA instalada, e nunca é bloqueado.
+ * Requer o script do GIS carregado no index.html:
+ *   <script src="https://accounts.google.com/gsi/client" async defer></script>
+ *
+ * Docs: https://developers.google.com/identity/oauth2/web/guides/use-token-model
  */
 
 import { GOOGLE_SCOPE } from "../constants.js";
 
-/**
- * Redireciona o usuário para a tela de login do Google.
- * Após autorizar, o Google redireciona de volta para a URL atual
- * com o access_token no fragment (#).
- */
-export function redirectToGoogle() {
+let tokenClient = null;
+let pendingCallback = null;
+
+/** Lê o Client ID do ambiente e valida que foi configurado. */
+function getClientId() {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
   if (!clientId || clientId.includes("SUBSTITUA_")) {
     throw new Error("Configure VITE_GOOGLE_CLIENT_ID no arquivo .env antes de conectar.");
   }
+  return clientId;
+}
 
-  // A redirect_uri deve ser a URL base do app (sem hash/query)
-  const redirectUri = window.location.origin + window.location.pathname;
+/** Garante que a biblioteca GIS foi carregada (script async no index.html). */
+function getGoogleOAuth() {
+  const oauth2 = window.google?.accounts?.oauth2;
+  if (!oauth2) {
+    throw new Error("Biblioteca do Google ainda não carregou. Verifique sua conexão e tente novamente.");
+  }
+  return oauth2;
+}
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: "token",
+/**
+ * Cria (uma única vez) o token client do GIS.
+ * O callback é despachado para o `pendingCallback` da chamada atual, permitindo
+ * reutilizar o mesmo client tanto para login quanto para refresh.
+ */
+function getTokenClient() {
+  if (tokenClient) return tokenClient;
+
+  const oauth2 = getGoogleOAuth();
+  tokenClient = oauth2.initTokenClient({
+    client_id: getClientId(),
     scope: GOOGLE_SCOPE,
-    include_granted_scopes: "true",
-    // prompt: "select_account" permite trocar de conta
-    // prompt: "consent" força re-autorização
-    prompt: "select_account"
+    callback: (response) => {
+      const cb = pendingCallback;
+      pendingCallback = null;
+      if (!cb) return;
+      if (response.error) {
+        cb(new Error(response.error_description || response.error), null);
+        return;
+      }
+      cb(null, {
+        accessToken: response.access_token,
+        expiresIn: Number(response.expires_in) || 3600
+      });
+    },
+    error_callback: (err) => {
+      const cb = pendingCallback;
+      pendingCallback = null;
+      if (cb) cb(new Error(err?.message || "Falha ao autenticar com o Google."), null);
+    }
   });
 
-  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  return tokenClient;
 }
 
 /**
- * Verifica se a URL atual contém um retorno do OAuth do Google.
- * Detecta: access_token (sucesso), error (falha), ou outros parâmetros OAuth (iss, state, etc.)
- * Se for retorno OAuth, limpa o hash e retorna o token (ou null se falhou).
- * Se não for OAuth (hash normal do app como #/visao-geral), retorna null sem limpar.
+ * Inicia o fluxo de login interativo (popup de seleção de conta + consentimento).
+ * @param {(err: Error|null, result: {accessToken: string, expiresIn: number}|null) => void} callback
  */
-export function extractTokenFromUrl() {
-  const hash = window.location.hash;
-  if (!hash || hash.length < 2) return null;
-
-  // Hashes do app começam com #/ (rotas)
-  if (hash.startsWith("#/")) return null;
-
-  const params = new URLSearchParams(hash.substring(1));
-  const accessToken = params.get("access_token");
-
-  // Se tem qualquer parâmetro OAuth (access_token, error, token_type, iss, state),
-  // é um retorno do Google — limpa o hash independente do resultado
-  const isOAuthReturn = accessToken ||
-    params.has("error") ||
-    params.has("token_type") ||
-    params.has("iss") ||
-    params.has("state");
-
-  if (!isOAuthReturn) return null;   // hash desconhecido, não mexe
-
-  // Limpa o hash da URL
-  const cleanUrl = window.location.origin + window.location.pathname;
-  window.history.replaceState({}, "", cleanUrl);
-
-  return accessToken || null;
+export function connectGoogle(callback) {
+  const client = getTokenClient();
+  pendingCallback = callback;
+  // prompt "select_account" permite trocar de conta a cada login.
+  client.requestAccessToken({ prompt: "select_account" });
 }
 
 /**
- * Revoga o token atual (best-effort, não bloqueia).
+ * Tenta renovar o access token SEM interação (prompt vazio).
+ * Funciona silenciosamente se a sessão do Google ainda estiver ativa e o
+ * usuário já tiver concedido os scopes. Caso contrário, o callback recebe erro
+ * e o chamador deve cair de volta no connectGoogle().
+ * @param {(err: Error|null, result: {accessToken: string, expiresIn: number}|null) => void} callback
+ */
+export function refreshToken(callback) {
+  const client = getTokenClient();
+  pendingCallback = callback;
+  client.requestAccessToken({ prompt: "" });
+}
+
+/**
+ * Revoga o access token atual (best-effort, não bloqueia).
+ * Usa a API do GIS quando disponível; cai no endpoint REST como fallback.
  */
 export function revokeToken(token) {
   if (!token) return;
+  const oauth2 = window.google?.accounts?.oauth2;
+  if (oauth2?.revoke) {
+    oauth2.revoke(token, () => {});
+    return;
+  }
   fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, { method: "POST" }).catch(() => {});
 }
