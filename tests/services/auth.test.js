@@ -43,40 +43,51 @@ afterEach(() => {
 // ─── connectGoogle ────────────────────────────────────────────────────────────
 
 describe("connectGoogle", () => {
-  it("inicia o fluxo interativo com prompt select_account", () => {
-    auth.connectGoogle(() => {});
+  it("inicia o fluxo interativo com prompt select_account", async () => {
+    await auth.connectGoogle(() => {});
     expect(window.google.accounts.oauth2.initTokenClient).toHaveBeenCalled();
     expect(requestSpy).toHaveBeenCalledWith({ prompt: "select_account" });
   });
 
-  it("entrega accessToken e expiresIn no callback em caso de sucesso", () => {
+  it("entrega accessToken e expiresIn no callback em caso de sucesso", async () => {
     const cb = vi.fn();
-    auth.connectGoogle(cb);
+    await auth.connectGoogle(cb);
     // Simula o Google chamando o callback do token client
     lastInit.callback({ access_token: "ya29.abc", expires_in: "3600" });
     expect(cb).toHaveBeenCalledWith(null, { accessToken: "ya29.abc", expiresIn: 3600 });
   });
 
-  it("entrega erro no callback quando a resposta contém error", () => {
+  it("entrega erro no callback quando a resposta contém error", async () => {
     const cb = vi.fn();
-    auth.connectGoogle(cb);
+    await auth.connectGoogle(cb);
     lastInit.callback({ error: "access_denied", error_description: "User denied" });
     expect(cb).toHaveBeenCalledWith(expect.any(Error), null);
     expect(cb.mock.calls[0][0].message).toBe("User denied");
+  });
+
+  it("entrega erro no callback quando a biblioteca GIS não carrega", async () => {
+    delete window.google;
+    vi.useFakeTimers();
+    const cb = vi.fn();
+    const p = auth.connectGoogle(cb);
+    await vi.advanceTimersByTimeAsync(10100); // ultrapassa o timeout de 10s
+    await p;
+    vi.useRealTimers();
+    expect(cb).toHaveBeenCalledWith(expect.any(Error), null);
   });
 });
 
 // ─── refreshToken ─────────────────────────────────────────────────────────────
 
 describe("refreshToken", () => {
-  it("tenta renovar silenciosamente com prompt vazio", () => {
-    auth.refreshToken(() => {});
+  it("tenta renovar silenciosamente com prompt vazio", async () => {
+    await auth.refreshToken(() => {});
     expect(requestSpy).toHaveBeenCalledWith({ prompt: "" });
   });
 
-  it("reutiliza o mesmo token client (initTokenClient chamado uma vez)", () => {
-    auth.connectGoogle(() => {});
-    auth.refreshToken(() => {});
+  it("reutiliza o mesmo token client (initTokenClient chamado uma vez)", async () => {
+    await auth.connectGoogle(() => {});
+    await auth.refreshToken(() => {});
     expect(window.google.accounts.oauth2.initTokenClient).toHaveBeenCalledTimes(1);
   });
 });

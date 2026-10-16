@@ -31,24 +31,44 @@ function getClientId() {
   return clientId;
 }
 
-/** Garante que a biblioteca GIS foi carregada (script async no index.html). */
-function getGoogleOAuth() {
-  const oauth2 = window.google?.accounts?.oauth2;
-  if (!oauth2) {
-    throw new Error("Biblioteca do Google ainda não carregou. Verifique sua conexão e tente novamente.");
-  }
-  return oauth2;
+/**
+ * Espera a biblioteca GIS (window.google.accounts.oauth2) ficar disponível.
+ * O script é carregado com `async defer` no index.html, então pode ainda não
+ * ter terminado de baixar no momento do clique — fazemos polling por até ~10s
+ * em vez de falhar imediatamente.
+ * @returns {Promise<object>} o objeto google.accounts.oauth2
+ */
+function waitForGoogleOAuth(timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
+    const existing = window.google?.accounts?.oauth2;
+    if (existing) {
+      resolve(existing);
+      return;
+    }
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const oauth2 = window.google?.accounts?.oauth2;
+      if (oauth2) {
+        clearInterval(interval);
+        resolve(oauth2);
+      } else if (Date.now() - start > timeoutMs) {
+        clearInterval(interval);
+        reject(new Error("Não foi possível carregar a biblioteca do Google. Verifique sua conexão e recarregue a página."));
+      }
+    }, 100);
+  });
 }
 
 /**
  * Cria (uma única vez) o token client do GIS.
  * O callback é despachado para o `pendingCallback` da chamada atual, permitindo
  * reutilizar o mesmo client tanto para login quanto para refresh.
+ * @returns {Promise<object>} o token client
  */
-function getTokenClient() {
+async function getTokenClient() {
   if (tokenClient) return tokenClient;
 
-  const oauth2 = getGoogleOAuth();
+  const oauth2 = await waitForGoogleOAuth();
   tokenClient = oauth2.initTokenClient({
     client_id: getClientId(),
     scope: GOOGLE_SCOPE,
@@ -79,8 +99,14 @@ function getTokenClient() {
  * Inicia o fluxo de login interativo (popup de seleção de conta + consentimento).
  * @param {(err: Error|null, result: {accessToken: string, expiresIn: number}|null) => void} callback
  */
-export function connectGoogle(callback) {
-  const client = getTokenClient();
+export async function connectGoogle(callback) {
+  let client;
+  try {
+    client = await getTokenClient();
+  } catch (err) {
+    callback(err, null);
+    return;
+  }
   pendingCallback = callback;
   // prompt "select_account" permite trocar de conta a cada login.
   client.requestAccessToken({ prompt: "select_account" });
@@ -93,8 +119,14 @@ export function connectGoogle(callback) {
  * e o chamador deve cair de volta no connectGoogle().
  * @param {(err: Error|null, result: {accessToken: string, expiresIn: number}|null) => void} callback
  */
-export function refreshToken(callback) {
-  const client = getTokenClient();
+export async function refreshToken(callback) {
+  let client;
+  try {
+    client = await getTokenClient();
+  } catch (err) {
+    callback(err, null);
+    return;
+  }
   pendingCallback = callback;
   client.requestAccessToken({ prompt: "" });
 }
